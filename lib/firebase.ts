@@ -1,5 +1,5 @@
-import { getApps, initializeApp as initClientApp } from "firebase/app";
-import { getAuth as getClientAuth } from "firebase/auth";
+import { getApps, initializeApp as initClientApp, type FirebaseApp } from "firebase/app";
+import { getAuth as getClientAuth, type Auth } from "firebase/auth";
 
 // ===============================
 // 🌐 FIREBASE CLIENT SDK (FRONTEND SIDE ONLY)
@@ -13,5 +13,25 @@ const clientCredentials = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-export const firebaseClientApp = getApps().length === 0 ? initClientApp(clientCredentials) : getApps()[0];
-export const clientAuth = getClientAuth(firebaseClientApp);
+function hasClientConfig(): boolean {
+  const { apiKey, authDomain, projectId, appId } = clientCredentials as Record<string, string | undefined>;
+  return !!(apiKey && authDomain && projectId && appId);
+}
+
+let cachedApp: FirebaseApp | null = null;
+let cachedAuth: Auth | null = null;
+
+export function getClientAuthInstance(): Auth | null {
+  if (typeof window === 'undefined') return null; // SSR/prerender: jangan init
+  if (!hasClientConfig()) {
+    console.warn('Firebase client env is missing. Skipping client initialization.');
+    return null;
+  }
+  if (!cachedApp) {
+    cachedApp = getApps().length === 0 ? initClientApp(clientCredentials) : getApps()[0];
+  }
+  if (!cachedAuth) {
+    cachedAuth = getClientAuth(cachedApp);
+  }
+  return cachedAuth;
+}

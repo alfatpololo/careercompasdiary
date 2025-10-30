@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { clientAuth } from "../lib/firebase";
+import { getClientAuthInstance } from "../lib/firebase";
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -27,7 +27,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(clientAuth, (u) => {
+    const auth = getClientAuthInstance();
+    if (!auth) { setLoading(false); return; }
+    const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoading(false);
     });
@@ -39,13 +41,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     isAuthenticated: !!user,
     async login(email: string, password: string) {
-      await signInWithEmailAndPassword(clientAuth, email, password);
+      const auth = getClientAuthInstance();
+      if (!auth) throw new Error("Firebase client is not initialized");
+      await signInWithEmailAndPassword(auth, email, password);
     },
     async register(email: string, password: string) {
-      await createUserWithEmailAndPassword(clientAuth, email, password);
+      const auth = getClientAuthInstance();
+      if (!auth) throw new Error("Firebase client is not initialized");
+      await createUserWithEmailAndPassword(auth, email, password);
     },
     async logout() {
-      await signOut(clientAuth);
+      const auth = getClientAuthInstance();
+      if (!auth) return;
+      await signOut(auth);
     },
   }), [user, loading]);
 
