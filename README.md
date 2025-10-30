@@ -419,3 +419,4 @@ MIT License - feel free to use this project for your quiz games!
 ## 📞 Support
 
 If you encounter any issues or have questions, please open an issue on GitHub.# careercompasdiary
+# careercompasdiary
