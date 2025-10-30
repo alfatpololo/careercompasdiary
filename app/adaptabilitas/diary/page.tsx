@@ -9,7 +9,7 @@ export default function DiaryForm() {
   const router = useRouter();
   const { user } = useAuth();
   const [formData, setFormData] = useState({
-    nama: user?.username || '',
+    nama: user?.displayName || user?.email || '',
     tanggal: new Date().toISOString().split('T')[0],
     judul: '',
     isi: ''
@@ -23,7 +23,7 @@ export default function DiaryForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: user?.id,
+          userId: user?.uid,
           ...formData
         })
       });

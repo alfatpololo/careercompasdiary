@@ -7,7 +7,7 @@ import { GameBadge } from '../../components/GameUI';
 
 export default function JourneyMap() {
   const router = useRouter();
-  const { isLoggedIn, user } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [latestPass, setLatestPass] = useState<Record<string, { score: number; passed: boolean; createdAt: string }>>({});
   const [startDone, setStartDone] = useState<boolean>(false);
   const [stageDone, setStageDone] = useState<Record<string, boolean>>({});
@@ -16,18 +16,18 @@ export default function JourneyMap() {
     async function fetchStatus() {
       if (!user) return;
       try {
-        const res = await fetch(`/api/stage?userId=${encodeURIComponent(user.id)}`);
+        const res = await fetch(`/api/stage?userId=${encodeURIComponent(user.uid)}`);
         if (res.ok) {
           const data = await res.json();
           setLatestPass(data.latest || {});
         }
 
         // Fetch start progress
-        const prog = await fetch(`/api/progress?userId=${encodeURIComponent(user.id)}`);
+        const prog = await fetch(`/api/progress?userId=${encodeURIComponent(user.uid)}`);
         if (prog.ok) {
           const pdata = await prog.json();
-          const progArr = pdata?.data?.progress || [];
-          const startItem = progArr.find((p: any) => p.levelId === 'start' && p.completed);
+          const progArr: Array<{ levelId: string; completed: boolean }> = pdata?.data?.progress || [];
+          const startItem = progArr.find((p) => p.levelId === 'start' && p.completed);
           setStartDone(!!startItem);
           const doneMap: Record<string, boolean> = {};
           for (const p of progArr) {
@@ -106,7 +106,7 @@ export default function JourneyMap() {
   ];
 
   const handleStageClick = (stageId: string) => {
-    if (!isLoggedIn) {
+    if (!isAuthenticated) {
       alert('Anda harus login terlebih dahulu untuk mengakses stage ini');
       router.push('/login');
       return;
@@ -196,7 +196,7 @@ export default function JourneyMap() {
         {/* Next Button */}
         <button
           onClick={() => {
-            if (!isLoggedIn) {
+            if (!isAuthenticated) {
               alert('Anda harus login terlebih dahulu');
               router.push('/login');
               return;
@@ -212,7 +212,7 @@ export default function JourneyMap() {
 
 
       {/* Login Prompt Overlay */}
-      {!isLoggedIn && (
+      {!isAuthenticated && (
         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30">
           <div className="bg-white rounded-lg p-8 max-w-md mx-4 text-center">
             <h3 className="text-xl font-bold text-gray-800 mb-4">Login Required</h3>

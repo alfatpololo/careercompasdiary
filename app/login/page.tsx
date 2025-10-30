@@ -23,25 +23,10 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        login(data.user); // Save user to context
-        alert('Login berhasil!');
-        router.push('/'); // Redirect to home
-      } else {
-        const error = await response.json();
-        alert(`Error: ${error.message}`);
-      }
+      await login(formData.username, formData.password);
+      alert('Login berhasil!');
+      router.push('/');
     } catch (error) {
       console.error('Login error:', error);
       alert('Terjadi kesalahan saat login');

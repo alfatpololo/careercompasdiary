@@ -35,7 +35,7 @@ export default function EvaluationProcess() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: user?.id,
+          userId: user?.uid,
           type: 'process',
           answers
         })

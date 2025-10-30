@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebaseAdmin';
 import { ApiResponse, User } from '@/types/user';
 
 // GET /api/users?userId=...

@@ -5,6 +5,7 @@ import { use } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { QuizComponent, AssessmentComponent } from './quiz';
 
+type StageKey = 'concern' | 'control' | 'curiosity' | 'confidence';
 export default function QuizPage({ params, searchParams }: { params: Promise<{ stage: string }>, searchParams: Promise<{ [key: string]: string }> }) {
   const router = useRouter();
   const { user } = useAuth();
@@ -38,8 +39,11 @@ export default function QuizPage({ params, searchParams }: { params: Promise<{ s
     );
   }
 
+  const allowed: readonly StageKey[] = ['concern','control','curiosity','confidence'] as const;
+  const stageKey: StageKey = allowed.includes(stage as StageKey) ? (stage as StageKey) : 'concern';
+
   if (isAssessment) {
-    return <AssessmentComponent stage={stage as any} />;
+    return <AssessmentComponent stage={stageKey} />;
   }
-  return <QuizComponent initialStage={stage as any} showIntroDefault={showIntro} />;
+  return <QuizComponent initialStage={stageKey} showIntroDefault={showIntro} />;
 }

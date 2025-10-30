@@ -12,6 +12,12 @@ interface QuizData {
   confidence: number[];
 }
 
+const quizStages = ['concern','control','curiosity','confidence'] as const;
+type QuizStage = typeof quizStages[number];
+function isQuizStage(s: string): s is QuizStage {
+  return (quizStages as readonly string[]).includes(s);
+}
+
 interface IntroPopupProps {
   onNext: () => void;
   onClose: () => void;
@@ -169,7 +175,7 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: user?.id,
+          userId: user?.uid,
           stage,
           answers: answers[stage],
           score: stageScore,
@@ -187,7 +193,7 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: user?.id,
+          userId: user?.uid,
           levelId: stage,
           score,
           completed
@@ -256,23 +262,25 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
   };
 
   const handleStageComplete = async () => {
+    if (!isQuizStage(currentStage)) return;
+    const stageKey = currentStage as keyof QuizData;
     // If not fully answered, guard
-    const stageAnswers = answers[currentStage] || [];
+    const stageAnswers = answers[stageKey] || [];
     if (stageAnswers.length !== 6) return;
 
     // Calculate score for this stage
     const stageScore = stageAnswers.reduce((a, b) => a + b, 0);
-    const threshold = currentStage in stageThresholds ? stageThresholds[currentStage as keyof typeof stageThresholds] : 0;
+    const threshold = stageThresholds[stageKey];
     const passed = stageScore >= threshold;
 
     // Save attempt to DB
-    await saveStageAttempt(currentStage as keyof QuizData, stageScore, passed);
-    await updateUserProgress(currentStage as keyof QuizData, stageScore, passed);
+    await saveStageAttempt(stageKey, stageScore, passed);
+    await updateUserProgress(stageKey, stageScore, passed);
 
     if (!passed) {
       setStageMessage(`Skor kamu ${stageScore}. Minimal ${threshold} untuk lolos. Coba lagi ya!`);
       // Reset answers for this stage only
-      setAnswers(prev => ({ ...prev, [currentStage]: [] }));
+      setAnswers(prev => ({ ...prev, [stageKey]: [] }));
       return; // stay on same stage
     }
 
@@ -303,7 +311,7 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: user.id,
+          userId: user.uid,
           answers,
           scores,
           total,
@@ -489,8 +497,12 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
     );
   }
 
-  const currentQuestions = questions[currentStage];
-  const stageAnswers = answers[currentStage] || [];
+  const currentQuestions = isQuizStage(currentStage)
+    ? questions[currentStage]
+    : [];
+  const stageAnswers = isQuizStage(currentStage)
+    ? answers[currentStage as keyof QuizData] || []
+    : [];
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{
@@ -639,7 +651,7 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: user.id,
+          userId: user.uid,
           stage,
           answers,
           score: correctCount,
@@ -649,7 +661,7 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
       await fetch('/api/progress', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, levelId: stage, score: correctCount, completed: passed })
+        body: JSON.stringify({ userId: user.uid, levelId: stage, score: correctCount, completed: passed })
       });
     } catch (e) {
       console.error(e);

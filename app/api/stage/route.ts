@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebaseAdmin';
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,7 +49,8 @@ export async function GET(request: NextRequest) {
       .orderBy('createdAt', 'desc')
       .get();
 
-    const attempts = querySnap.docs.map(d => ({ id: d.id, ...(d.data() as any) }));
+    type AttemptData = { stage: string; score: number; passed: boolean; createdAt: string; answers?: unknown[] };
+    const attempts = querySnap.docs.map(d => ({ id: d.id, ...(d.data() as AttemptData) }));
 
     // Build latest pass status per stage
     const latest: Record<string, { score: number; passed: boolean; createdAt: string }> = {};

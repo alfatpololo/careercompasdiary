@@ -32,6 +32,17 @@ export default function Profile() {
     );
   }
 
+  type OptionalProfile = {
+    username?: string;
+    role?: 'guru' | 'siswa';
+    usia?: number;
+    jenisKelamin?: string;
+    phone?: string;
+    alamat?: string;
+    namaSekolah?: string;
+  };
+  const profile = user as unknown as OptionalProfile;
+
   return (
     <div 
       className="min-h-screen w-full relative"
@@ -90,7 +101,7 @@ export default function Profile() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
               <div className="px-3 py-2 bg-gray-100 rounded-md text-gray-800">
-                {user.username}
+                {user.displayName || profile.username || user.email || user.uid}
               </div>
             </div>
 
@@ -104,42 +115,42 @@ export default function Profile() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
               <div className="px-3 py-2 bg-gray-100 rounded-md text-gray-800">
-                {user.role === 'guru' ? 'Guru BK/Konselor' : 'Siswa'}
+                {profile.role ? (profile.role === 'guru' ? 'Guru BK/Konselor' : 'Siswa') : '-'}
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Usia</label>
               <div className="px-3 py-2 bg-gray-100 rounded-md text-gray-800">
-                {user.usia} tahun
+                {profile.usia ?? '-'} {profile.usia ? 'tahun' : ''}
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Jenis Kelamin</label>
               <div className="px-3 py-2 bg-gray-100 rounded-md text-gray-800">
-                {user.jenisKelamin}
+                {profile.jenisKelamin ?? '-'}
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Phone/WA</label>
               <div className="px-3 py-2 bg-gray-100 rounded-md text-gray-800">
-                {user.phone}
+                {profile.phone ?? '-'}
               </div>
             </div>
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">Alamat</label>
               <div className="px-3 py-2 bg-gray-100 rounded-md text-gray-800">
-                {user.alamat}
+                {profile.alamat ?? '-'}
               </div>
             </div>
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">Nama Sekolah</label>
               <div className="px-3 py-2 bg-gray-100 rounded-md text-gray-800">
-                {user.namaSekolah}
+                {profile.namaSekolah ?? '-'}
               </div>
             </div>
           </div>

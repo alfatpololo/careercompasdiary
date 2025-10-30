@@ -35,7 +35,7 @@ export default function EvaluationResult() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: user?.id,
+          userId: user?.uid,
           type: 'result',
           answers
         })
@@ -48,7 +48,7 @@ export default function EvaluationResult() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              userId: user?.id,
+              userId: user?.uid,
               levelId: 'start',
               score: 1,
               completed: true

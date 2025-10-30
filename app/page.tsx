@@ -6,7 +6,7 @@ import { GameButton } from '../components/GameUI';
 
 export default function Home() {
   const router = useRouter();
-  const { isLoggedIn, user, logout } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   
   return (
     <div 
@@ -28,7 +28,7 @@ export default function Home() {
           ))}
           
           {/* Conditional buttons based on login status */}
-          {isLoggedIn ? (
+          {isAuthenticated ? (
             <>
               <GameButton className="px-4 py-2 text-xs" onClick={() => router.push('/profile')}>PROFIL</GameButton>
               <GameButton className="px-4 py-2 text-xs from-red-400 to-red-600" onClick={logout}>LOGOUT</GameButton>
