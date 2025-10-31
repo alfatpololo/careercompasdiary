@@ -9,7 +9,7 @@ export default function Login() {
   const router = useRouter();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
-    username: '',
+    email: '',
     password: ''
   });
 
@@ -24,12 +24,22 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(formData.username, formData.password);
+      await login(formData.email, formData.password);
       alert('Login berhasil!');
       router.push('/');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      alert('Terjadi kesalahan saat login');
+      let errorMessage = 'Terjadi kesalahan saat login';
+      if (error?.code === 'auth/invalid-credential') {
+        errorMessage = 'Email atau password salah. Pastikan email dan password yang Anda masukkan benar.';
+      } else if (error?.code === 'auth/user-not-found') {
+        errorMessage = 'Email tidak terdaftar. Silakan daftar terlebih dahulu.';
+      } else if (error?.code === 'auth/wrong-password') {
+        errorMessage = 'Password salah.';
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      alert(errorMessage);
     }
   };
 
@@ -71,8 +81,8 @@ export default function Login() {
             <label className="block text-sm font-extrabold text-white mb-2 drop-shadow">Email</label>
             <input
               type="email"
-              name="username"
-              value={formData.username}
+              name="email"
+              value={formData.email}
               onChange={handleInputChange}
               className="w-full px-3 py-2 rounded-xl bg-white/90 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
               required

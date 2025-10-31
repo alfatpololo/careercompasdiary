@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '../../contexts/AuthContext';
 import { GameCard, GameButton } from '../../components/GameUI';
 
 export default function Register() {
   const router = useRouter();
+  const { register: firebaseRegister } = useAuth();
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -30,24 +32,36 @@ export default function Register() {
     e.preventDefault();
     
     try {
-      const response = await fetch('/api/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      // Step 1: Create user di Firebase Auth dulu
+      await firebaseRegister(formData.email, formData.password);
+      
+      // Step 2: Simpan data tambahan ke Firestore via API (optional, bisa gagal tapi tidak blokir)
+      try {
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
+        });
 
-      if (response.ok) {
-        alert('Registrasi berhasil!');
-        router.push('/login');
-      } else {
-        const error = await response.json();
-        alert(`Error: ${error.message}`);
+        if (!response.ok) {
+          console.warn('Failed to save additional user data to Firestore, but Auth user created');
+        }
+      } catch (apiError) {
+        console.warn('API route failed, but Auth user created:', apiError);
       }
+
+      alert('Registrasi berhasil! Silakan login.');
+      router.push('/login');
     } catch (error) {
       console.error('Registration error:', error);
-      alert('Terjadi kesalahan saat registrasi');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      if (errorMessage.includes('email-already-in-use')) {
+        alert('Email sudah terdaftar. Silakan login atau gunakan email lain.');
+      } else {
+        alert(`Terjadi kesalahan: ${errorMessage}`);
+      }
     }
   };
 
