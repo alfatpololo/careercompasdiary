@@ -66,11 +66,11 @@ export default function Login() {
         <h2 className="text-3xl font-extrabold text-center text-white drop-shadow mb-6">Login</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Username */}
+          {/* Email */}
           <div>
-            <label className="block text-sm font-extrabold text-white mb-2 drop-shadow">Username</label>
+            <label className="block text-sm font-extrabold text-white mb-2 drop-shadow">Email</label>
             <input
-              type="text"
+              type="email"
               name="username"
               value={formData.username}
               onChange={handleInputChange}
