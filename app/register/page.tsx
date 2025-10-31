@@ -33,29 +33,47 @@ export default function Register() {
     
     try {
       // Step 1: Create user di Firebase Auth dulu
-      await firebaseRegister(formData.email, formData.password);
+      const authResult = await firebaseRegister(formData.email, formData.password);
+      const userId = authResult?.user?.uid;
       
-      // Step 2: Simpan data tambahan ke Firestore via API (optional, bisa gagal tapi tidak blokir)
+      if (!userId) {
+        throw new Error('User ID tidak ditemukan setelah registrasi');
+      }
+
+      console.log('[Register] Firebase Auth user created with UID:', userId);
+      
+      // Step 2: Simpan data tambahan ke Firestore via API dengan userId dari Firebase Auth
       try {
         const response = await fetch('/api/register', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({
+            ...formData,
+            userId: userId // Kirim userId dari Firebase Auth
+          }),
         });
 
+        const apiData = await response.json();
+        
         if (!response.ok) {
-          console.warn('Failed to save additional user data to Firestore, but Auth user created');
+          console.error('[Register] Failed to save user data:', apiData);
+          console.warn('Firebase Auth user created, but Firestore document failed. User ID:', userId);
+          alert('Registrasi berhasil, tapi ada masalah menyimpan data. Silakan login dan coba lagi.');
+        } else {
+          console.log('[Register] User document saved successfully:', apiData);
         }
       } catch (apiError) {
-        console.warn('API route failed, but Auth user created:', apiError);
+        console.error('[Register] API route error:', apiError);
+        console.warn('Firebase Auth user created, but Firestore document failed. User ID:', userId);
+        alert('Registrasi berhasil, tapi ada masalah menyimpan data. Silakan login dan coba lagi.');
       }
 
       alert('Registrasi berhasil! Silakan login.');
       router.push('/login');
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('[Register] Registration error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       if (errorMessage.includes('email-already-in-use')) {
         alert('Email sudah terdaftar. Silakan login atau gunakan email lain.');
@@ -106,7 +124,7 @@ export default function Register() {
               name="role"
               value={formData.role}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 rounded-xl bg-white/90 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
+              className="w-full px-3 py-2 rounded-xl bg-white/90 text-gray-800 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
               required
             >
               <option value="siswa">Siswa</option>
@@ -122,7 +140,7 @@ export default function Register() {
               name="username"
               value={formData.username}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 rounded-xl bg-white/90 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
+              className="w-full px-3 py-2 rounded-xl bg-white/90 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
               required
             />
           </div>
@@ -135,7 +153,7 @@ export default function Register() {
               name="password"
               value={formData.password}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 rounded-xl bg-white/90 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
+              className="w-full px-3 py-2 rounded-xl bg-white/90 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
               required
             />
           </div>
@@ -148,7 +166,7 @@ export default function Register() {
               name="usia"
               value={formData.usia}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 rounded-xl bg-white/90 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
+              className="w-full px-3 py-2 rounded-xl bg-white/90 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
               required
             />
           </div>
@@ -160,7 +178,7 @@ export default function Register() {
               name="jenisKelamin"
               value={formData.jenisKelamin}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 rounded-xl bg-white/90 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
+              className="w-full px-3 py-2 rounded-xl bg-white/90 text-gray-800 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
               required
             >
               <option value="">Pilih Jenis Kelamin</option>
@@ -177,7 +195,7 @@ export default function Register() {
               value={formData.alamat}
               onChange={handleInputChange}
               rows={3}
-              className="w-full px-3 py-2 rounded-xl bg-white/90 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
+              className="w-full px-3 py-2 rounded-xl bg-white/90 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
               required
             />
           </div>
@@ -189,7 +207,7 @@ export default function Register() {
               name="namaSekolah"
               value={formData.namaSekolah}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 rounded-xl bg-white/90 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
+              className="w-full px-3 py-2 rounded-xl bg-white/90 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
               required
             />
           </div>
@@ -202,7 +220,7 @@ export default function Register() {
               name="email"
               value={formData.email}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 rounded-xl bg-white/90 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
+              className="w-full px-3 py-2 rounded-xl bg-white/90 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
               required
             />
           </div>
@@ -215,7 +233,7 @@ export default function Register() {
               name="phone"
               value={formData.phone}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 rounded-xl bg-white/90 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
+              className="w-full px-3 py-2 rounded-xl bg-white/90 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
               required
             />
           </div>

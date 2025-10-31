@@ -30,38 +30,90 @@ export default function EvaluationResult() {
       return;
     }
 
+    if (!user?.uid) {
+      alert('User ID tidak ditemukan. Silakan login ulang.');
+      return;
+    }
+
     try {
+      console.log('[Evaluation Result] Submitting evaluation...');
       const response = await fetch('/api/evaluation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: user?.uid,
+          userId: user.uid,
           type: 'result',
           answers
         })
       });
 
-      if (response.ok) {
-        // Tandai START selesai pada progress user agar Concern terbuka di Journey
-        try {
-          await fetch('/api/progress', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId: user?.uid,
-              levelId: 'start',
-              score: 1,
-              completed: true
-            })
-          });
-        } catch (e) {
-          console.error('Failed to update start progress', e);
-        }
+      const evalData = await response.json();
+      console.log('[Evaluation Result] Evaluation API response:', evalData);
 
-        router.push('/journey');
+      if (!response.ok) {
+        alert(`Gagal menyimpan evaluasi: ${evalData.error || 'Unknown error'}`);
+        return;
+      }
+
+      // Tandai START selesai pada progress user agar Concern terbuka di Journey
+      console.log('[Evaluation Result] Saving START progress...');
+      try {
+        // START tidak butuh skor, hanya completion
+        const progressRes = await fetch('/api/progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user.uid,
+            levelId: 'start',
+            score: 0, // START tidak butuh skor
+            completed: true
+          })
+        });
+        
+        const progressResData = await progressRes.json();
+        console.log('[Evaluation Result] Progress API response:', progressResData);
+        
+        if (!progressRes.ok) {
+          console.error('[Evaluation Result] ❌ Progress update failed:', {
+            status: progressRes.status,
+            error: progressResData.error
+          });
+          alert(`⚠️ Evaluasi tersimpan, tapi progress gagal diupdate: ${progressResData.error || 'Unknown error'}\n\nSilakan refresh halaman Journey setelah ini.`);
+          router.push('/congratulations');
+          return;
+        }
+        
+        console.log('[Evaluation Result] ✅ Progress START saved successfully:', {
+          response: progressResData,
+          savedProgress: progressResData?.data?.progress || []
+        });
+        
+        // Verify the save - double check dengan delay kecil untuk memastikan write sudah commit
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const verifyRes = await fetch(`/api/progress?userId=${encodeURIComponent(user.uid)}`);
+        if (verifyRes.ok) {
+          const verifyData = await verifyRes.json();
+          const verifyArr = verifyData?.data?.progress || [];
+          const startFound = verifyArr.find((p: any) => p.levelId === 'start' && p.completed === true);
+          console.log('[Evaluation Result] ✅ Verification - START found in progress:', !!startFound, verifyArr);
+          
+          if (!startFound) {
+            console.warn('[Evaluation Result] ⚠️ WARNING: START progress not found in verification!');
+            alert('⚠️ Progress mungkin belum tersimpan dengan benar. Silakan refresh halaman Journey.');
+          }
+        }
+        
+        // Redirect ke congratulations page
+        router.push('/congratulations');
+      } catch (e) {
+        console.error('[Evaluation Result] ❌ Exception saving progress:', e);
+        alert(`⚠️ Evaluasi tersimpan, tapi ada error saat update progress.\n\nError: ${e instanceof Error ? e.message : 'Unknown error'}\n\nSilakan refresh halaman Journey setelah ini.`);
+        router.push('/congratulations');
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('[Evaluation Result] ❌ Error:', error);
+      alert(`Terjadi kesalahan: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 

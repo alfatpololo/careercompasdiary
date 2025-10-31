@@ -80,7 +80,7 @@ export default function DiaryForm() {
                   type="text"
                   value={formData.nama}
                   onChange={(e) => setFormData({...formData, nama: e.target.value})}
-                  className="w-full px-3 py-2 rounded-xl bg-white/90 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
+                  className="w-full px-3 py-2 rounded-xl bg-white/90 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
                   required
                 />
               </div>
@@ -90,7 +90,7 @@ export default function DiaryForm() {
                   type="date"
                   value={formData.tanggal}
                   onChange={(e) => setFormData({...formData, tanggal: e.target.value})}
-                  className="w-full px-3 py-2 rounded-xl bg-white/90 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
+                  className="w-full px-3 py-2 rounded-xl bg-white/90 text-gray-800 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
                   required
                 />
               </div>
@@ -100,7 +100,7 @@ export default function DiaryForm() {
                   type="text"
                   value={formData.judul}
                   onChange={(e) => setFormData({...formData, judul: e.target.value})}
-                  className="w-full px-3 py-2 rounded-xl bg-white/90 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
+                  className="w-full px-3 py-2 rounded-xl bg-white/90 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
                   required
                 />
               </div>
@@ -110,7 +110,7 @@ export default function DiaryForm() {
                   value={formData.isi}
                   onChange={(e) => setFormData({...formData, isi: e.target.value})}
                   rows={8}
-                  className="w-full px-3 py-2 rounded-xl bg-white/90 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
+                  className="w-full px-3 py-2 rounded-xl bg-white/90 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
                   required
                 />
               </div>

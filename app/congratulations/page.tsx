@@ -25,30 +25,25 @@ export default function Congratulations() {
         </h1>
         
         <p className="text-xl text-gray-600 mb-6">
-          Anda telah menyelesaikan seluruh kuesioner Career Compass DIARY dengan baik!
+          Anda telah menyelesaikan tahap START dengan baik! 🎊
         </p>
         
         <p className="text-lg text-gray-700 mb-4">
-          Terima kasih atas partisipasi dan kejujuran Anda dalam mengisi kuesioner ini. 🌟
+          Selamat! Anda sudah menyelesaikan seluruh proses pengisian evaluasi. 
+          Tahap START telah dicentang dan stage berikutnya (Concern) sekarang sudah terbuka untuk Anda. ✨
         </p>
         
         <p className="text-base text-gray-600 mb-8">
-          Hasil yang Anda peroleh akan membantu Anda memahami lebih dalam tentang adaptabilitas karier Anda.
+          Lanjutkan perjalanan Anda dengan mengklik tombol di bawah untuk melihat Journey Map, 
+          di mana Anda akan melihat centang hijau pada stage START dan bisa melanjutkan ke stage berikutnya.
         </p>
 
         <div className="flex justify-center space-x-4">
           <button
-            onClick={() => router.push('/quiz/concern')}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-bold text-lg transition-colors flex items-center"
+            onClick={() => router.push('/journey?refresh=true')}
+            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-3 rounded-lg font-bold text-lg transition-all transform hover:scale-105 shadow-lg"
           >
-            Mulai Concern
-          </button>
-          
-          <button
-            onClick={() => router.push('/journey')}
-            className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg font-bold text-lg transition-colors"
-          >
-            Kembali ke Journey
+            Lihat Journey Map
           </button>
         </div>
       </div>

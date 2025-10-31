@@ -8,6 +8,7 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   User as FirebaseUser,
+  UserCredential,
 } from "firebase/auth";
 import { useRouter } from "next/navigation";
 
@@ -16,7 +17,7 @@ type AuthContextValue = {
   loading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string) => Promise<UserCredential>;
   logout: () => Promise<void>;
 };
 
@@ -48,7 +49,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async register(email: string, password: string) {
       const auth = getClientAuthInstance();
       if (!auth) throw new Error("Firebase client is not initialized");
-      await createUserWithEmailAndPassword(auth, email, password);
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      return result; // Return result so we can get user.uid
     },
     async logout() {
       const auth = getClientAuthInstance();

@@ -43,16 +43,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: 'Database tidak tersedia' }, { status: 503 });
     }
 
+    // Fetch all attempts for user (without orderBy to avoid index requirement)
     const querySnap = await adminDb
       .collection('stage_attempts')
       .where('userId', '==', userId)
-      .orderBy('createdAt', 'desc')
       .get();
 
     type AttemptData = { stage: string; score: number; passed: boolean; createdAt: string; answers?: unknown[] };
-    const attempts = querySnap.docs.map(d => ({ id: d.id, ...(d.data() as AttemptData) }));
+    const attempts = querySnap.docs.map(d => ({ id: d.id, ...(d.data() as AttemptData) }))
+      .sort((a, b) => {
+        // Sort by createdAt descending (latest first)
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+        return dateB - dateA;
+      });
 
-    // Build latest pass status per stage
+    // Build latest pass status per stage (already sorted, so first occurrence is latest)
     const latest: Record<string, { score: number; passed: boolean; createdAt: string }> = {};
     for (const a of attempts) {
       if (!latest[a.stage]) {

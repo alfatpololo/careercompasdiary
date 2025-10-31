@@ -8,7 +8,7 @@ export interface User {
 }
 
 export interface Progress {
-  levelId: number;
+  levelId: string;
   score: number;
   completed: boolean;
   completedAt?: Date;
@@ -27,7 +27,7 @@ export interface LoginRequest {
 
 export interface ProgressRequest {
   userId: string;
-  levelId: number;
+  levelId: string;
   score: number;
   completed: boolean;
 }

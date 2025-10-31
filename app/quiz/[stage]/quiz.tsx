@@ -273,9 +273,12 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
     const threshold = stageThresholds[stageKey];
     const passed = stageScore >= threshold;
 
-    // Save attempt to DB
+    // Save attempt to DB (untuk tracking retry stats)
+    // CATATAN: JANGAN update progress.completed di sini karena ini hanya quiz pengenalan START,
+    // bukan assessment yang sebenarnya. Progress.completed untuk concern/control/curiosity/confidence
+    // hanya di-set saat AssessmentComponent (di Journey) passed.
     await saveStageAttempt(stageKey, stageScore, passed);
-    await updateUserProgress(stageKey, stageScore, passed);
+    // HAPUS: await updateUserProgress(stageKey, stageScore, passed); // ❌ JANGAN SET PROGRESS DI QUIZ PENGENALAN
 
     if (!passed) {
       setStageMessage(`Skor kamu ${stageScore}. Minimal ${threshold} untuk lolos. Coba lagi ya!`);
@@ -321,8 +324,28 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
       });
 
       if (response.ok) {
-        // After saving, go to adaptabilitas
-        router.push('/adaptabilitas');
+        // Mark START as completed
+        try {
+          const progressRes = await fetch('/api/progress', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: user.uid,
+              levelId: 'start',
+              score: 0,
+              completed: true
+            })
+          });
+          
+          if (progressRes.ok) {
+            console.log('[Quiz] START progress saved');
+          }
+        } catch (e) {
+          console.error('[Quiz] Failed to save START progress', e);
+        }
+        
+        // After saving quiz results, lanjut ke sesi pengenalan adaptabilitas karir (dengan voice)
+        router.push('/adaptabilitas-intro');
       } else {
         alert('Terjadi kesalahan saat menyimpan hasil');
       }
@@ -722,13 +745,12 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
             right={
               modal.type === 'success' ? (
                 <div className="flex flex-col gap-3">
-                  <GameButton onClick={() => router.push('/journey')}>Home</GameButton>
-                  <GameButton onClick={() => { const order = ['concern','control','curiosity','confidence'] as const; const idx = order.indexOf(stage); setModal(null); if (idx < order.length - 1) router.push(`/quiz/${order[idx+1]}?mode=assessment`); else router.push('/journey'); }} className="from-green-400 to-green-600">Lanjut</GameButton>
+                  <GameButton onClick={() => router.push('/journey?refresh=true')}>Kembali ke Journey</GameButton>
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
                   <GameButton onClick={() => { setModal(null); setAnswers(Array(questions.length).fill(-1)); }} className="from-blue-400 to-blue-600">Ulang Stage</GameButton>
-                  <GameButton onClick={() => router.push('/journey')}>Home</GameButton>
+                  <GameButton onClick={() => router.push('/journey?refresh=true')}>Kembali ke Journey</GameButton>
                 </div>
               )
             }

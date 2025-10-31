@@ -33,12 +33,14 @@ export default function Login() {
       
       if (error && typeof error === 'object' && 'code' in error) {
         const firebaseError = error as { code?: string; message?: string };
-        if (firebaseError.code === 'auth/invalid-credential') {
-          errorMessage = 'Email atau password salah. Pastikan email dan password yang Anda masukkan benar.';
-        } else if (firebaseError.code === 'auth/user-not-found') {
-          errorMessage = 'Email tidak terdaftar. Silakan daftar terlebih dahulu.';
+        if (firebaseError.code === 'auth/invalid-credential' || firebaseError.code === 'auth/user-not-found') {
+          errorMessage = 'Email tidak terdaftar atau password salah.\n\nSetelah reset Firebase, semua akun telah dihapus.\nSilakan daftar ulang dengan email baru atau klik "Daftar di sini" untuk membuat akun baru.';
         } else if (firebaseError.code === 'auth/wrong-password') {
-          errorMessage = 'Password salah.';
+          errorMessage = 'Password salah. Silakan coba lagi.';
+        } else if (firebaseError.code === 'auth/user-disabled') {
+          errorMessage = 'Akun ini telah dinonaktifkan. Hubungi administrator.';
+        } else if (firebaseError.code === 'auth/too-many-requests') {
+          errorMessage = 'Terlalu banyak percobaan login yang gagal. Silakan coba lagi nanti.';
         } else if (firebaseError.message) {
           errorMessage = firebaseError.message;
         }
@@ -91,7 +93,7 @@ export default function Login() {
               name="email"
               value={formData.email}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 rounded-xl bg-white/90 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
+              className="w-full px-3 py-2 rounded-xl bg-white/90 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
               required
             />
           </div>
@@ -104,7 +106,7 @@ export default function Login() {
               name="password"
               value={formData.password}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 rounded-xl bg-white/90 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
+              className="w-full px-3 py-2 rounded-xl bg-white/90 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-emerald-300 border-4 border-white/70"
               required
             />
           </div>
