@@ -27,18 +27,25 @@ export default function Login() {
       await login(formData.email, formData.password);
       alert('Login berhasil!');
       router.push('/');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Login error:', error);
       let errorMessage = 'Terjadi kesalahan saat login';
-      if (error?.code === 'auth/invalid-credential') {
-        errorMessage = 'Email atau password salah. Pastikan email dan password yang Anda masukkan benar.';
-      } else if (error?.code === 'auth/user-not-found') {
-        errorMessage = 'Email tidak terdaftar. Silakan daftar terlebih dahulu.';
-      } else if (error?.code === 'auth/wrong-password') {
-        errorMessage = 'Password salah.';
-      } else if (error?.message) {
+      
+      if (error && typeof error === 'object' && 'code' in error) {
+        const firebaseError = error as { code?: string; message?: string };
+        if (firebaseError.code === 'auth/invalid-credential') {
+          errorMessage = 'Email atau password salah. Pastikan email dan password yang Anda masukkan benar.';
+        } else if (firebaseError.code === 'auth/user-not-found') {
+          errorMessage = 'Email tidak terdaftar. Silakan daftar terlebih dahulu.';
+        } else if (firebaseError.code === 'auth/wrong-password') {
+          errorMessage = 'Password salah.';
+        } else if (firebaseError.message) {
+          errorMessage = firebaseError.message;
+        }
+      } else if (error instanceof Error) {
         errorMessage = error.message;
       }
+      
       alert(errorMessage);
     }
   };
