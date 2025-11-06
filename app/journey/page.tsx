@@ -163,59 +163,66 @@ export default function JourneyMap() {
   }, [user, fetchStatus]);
 
   const unlocked = useMemo(() => {
-    // LOGIKA SEQUENTIAL UNLOCK SEDERHANA:
-    // 1. START → CONCERN (kalau START selesai, CONCERN unlock)
+    // LOGIKA SEQUENTIAL UNLOCK SEDERHANA & STRICT:
+    // 1. START → CONCERN (kalau START selesai SEMUA tahap, CONCERN unlock)
     // 2. CONCERN → CONTROL (kalau CONCERN passed assessment, CONTROL unlock)
     // 3. CONTROL → CURIOSITY (kalau CONTROL passed assessment, CURIOSITY unlock)
     // 4. CURIOSITY → CONFIDENCE (kalau CURIOSITY passed assessment, CONFIDENCE unlock)
     // 5. CONFIDENCE → ADAPTABILITAS (kalau CONFIDENCE passed assessment, ADAPTABILITAS unlock)
     
-    // Cek apakah START sudah selesai
+    // Cek apakah START sudah selesai SEMUA tahap (quiz → intro → diary → evaluation)
+    // START progress hanya diset di evaluation-result setelah semua tahap selesai
     const isStartDone = startDone === true;
     
-    // Cek apakah stage assessment sudah PASSED (nilai minimal terpenuhi)
-    const concernPassed = latestPass['concern']?.passed === true;
-    const controlPassed = latestPass['control']?.passed === true;
-    const curiosityPassed = latestPass['curiosity']?.passed === true;
-    const confidencePassed = latestPass['confidence']?.passed === true;
+    // Cek apakah stage assessment sudah PASSED (nilai minimal terpenuhi) - STRICT CHECK
+    const concernPassed = !!latestPass['concern'] && latestPass['concern'].passed === true;
+    const controlPassed = !!latestPass['control'] && latestPass['control'].passed === true;
+    const curiosityPassed = !!latestPass['curiosity'] && latestPass['curiosity'].passed === true;
+    const confidencePassed = !!latestPass['confidence'] && latestPass['confidence'].passed === true;
     
-    // Unlock map - SEMUA LOCKED dulu, baru unlock satu per satu
+    // Unlock map - SEMUA LOCKED dulu (default), baru unlock satu per satu secara SEQUENTIAL
     const unlockMap: Record<string, boolean> = {
-      start: true,           // START selalu unlocked
-      concern: false,        // CONCERN locked sampai START selesai
-      control: false,        // CONTROL locked sampai CONCERN passed
-      curiosity: false,      // CURIOSITY locked sampai CONTROL passed
-      confidence: false,     // CONFIDENCE locked sampai CURIOSITY passed
-      adaptabilitas: false,  // ADAPTABILITAS locked sampai CONFIDENCE passed
+      start: true,           // START selalu unlocked (awal game)
+      concern: false,        // CONCERN locked sampai START selesai SEMUA tahap
+      control: false,        // CONTROL locked sampai CONCERN passed assessment
+      curiosity: false,      // CURIOSITY locked sampai CONTROL passed assessment
+      confidence: false,     // CONFIDENCE locked sampai CURIOSITY passed assessment
+      adaptabilitas: false,  // ADAPTABILITAS locked sampai CONFIDENCE passed assessment
     };
     
-    // Unlock sequential satu per satu
+    // Unlock sequential satu per satu - KETAT
+    // Hanya unlock jika kondisi sebelumnya benar-benar terpenuhi
     if (isStartDone) {
-      unlockMap.concern = true;  // Unlock CONCERN kalau START selesai
+      unlockMap.concern = true;  // Unlock CONCERN hanya kalau START selesai SEMUA tahap
     }
     
+    // CONTROL hanya unlock jika CONCERN sudah passed (assessment)
     if (concernPassed) {
-      unlockMap.control = true;  // Unlock CONTROL kalau CONCERN passed
+      unlockMap.control = true;
     }
     
+    // CURIOSITY hanya unlock jika CONTROL sudah passed
     if (controlPassed) {
-      unlockMap.curiosity = true;  // Unlock CURIOSITY kalau CONTROL passed
+      unlockMap.curiosity = true;
     }
     
+    // CONFIDENCE hanya unlock jika CURIOSITY sudah passed
     if (curiosityPassed) {
-      unlockMap.confidence = true;  // Unlock CONFIDENCE kalau CURIOSITY passed
+      unlockMap.confidence = true;
     }
     
+    // ADAPTABILITAS hanya unlock jika CONFIDENCE sudah passed
     if (confidencePassed) {
-      unlockMap.adaptabilitas = true;  // Unlock ADAPTABILITAS kalau CONFIDENCE passed
+      unlockMap.adaptabilitas = true;
     }
     
-    console.log('[Journey] 🔒 Sequential Unlock:', {
+    console.log('[Journey] 🔒 Sequential Unlock (STRICT):', {
       startDone: isStartDone,
       concernPassed,
       controlPassed,
       curiosityPassed,
       confidencePassed,
+      latestPassKeys: Object.keys(latestPass),
       unlockMap
     });
     
@@ -359,12 +366,6 @@ export default function JourneyMap() {
               </div>
             )}
             
-            {/* Debug indicator - hanya di development dan hanya untuk debugging internal */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-white bg-black bg-opacity-70 px-2 py-1 rounded whitespace-nowrap z-20">
-                {isStageUnlocked ? 'UNLOCKED' : 'LOCKED'} ({stage.id})
-              </div>
-            )}
           </div>
           
           {/* Hover Tooltip */}

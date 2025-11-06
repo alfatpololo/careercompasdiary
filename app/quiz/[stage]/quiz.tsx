@@ -264,28 +264,29 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
   const handleStageComplete = async () => {
     if (!isQuizStage(currentStage)) return;
     const stageKey = currentStage as keyof QuizData;
-    // If not fully answered, guard
+    
+    // VALIDASI KETAT: Pastikan semua 6 pertanyaan sudah diisi (index 0-5 semua punya nilai > 0)
     const stageAnswers = answers[stageKey] || [];
-    if (stageAnswers.length !== 6) return;
-
-    // Calculate score for this stage
-    const stageScore = stageAnswers.reduce((a, b) => a + b, 0);
-    const threshold = stageThresholds[stageKey];
-    const passed = stageScore >= threshold;
-
-    // Save attempt to DB (untuk tracking retry stats)
-    // CATATAN: JANGAN update progress.completed di sini karena ini hanya quiz pengenalan START,
-    // bukan assessment yang sebenarnya. Progress.completed untuk concern/control/curiosity/confidence
-    // hanya di-set saat AssessmentComponent (di Journey) passed.
-    await saveStageAttempt(stageKey, stageScore, passed);
-    // HAPUS: await updateUserProgress(stageKey, stageScore, passed); // ❌ JANGAN SET PROGRESS DI QUIZ PENGENALAN
-
-    if (!passed) {
-      setStageMessage(`Skor kamu ${stageScore}. Minimal ${threshold} untuk lolos. Coba lagi ya!`);
-      // Reset answers for this stage only
-      setAnswers(prev => ({ ...prev, [stageKey]: [] }));
-      return; // stay on same stage
+    
+    // Cek: harus ada 6 jawaban DAN semua index 0-5 punya nilai > 0
+    const allQuestionsAnswered = stageAnswers.length === 6 && 
+      [0, 1, 2, 3, 4, 5].every(index => {
+        const answer = stageAnswers[index];
+        return answer !== undefined && answer !== null && answer > 0;
+      });
+    
+    if (!allQuestionsAnswered) {
+      setStageMessage('Silakan jawab semua 6 pertanyaan terlebih dahulu!');
+      return;
     }
+
+    // START: Tidak perlu cek nilai minimal, cukup semua pertanyaan diisi langsung next
+    // Calculate score hanya untuk display di results, tidak untuk validasi
+    const stageScore = stageAnswers.reduce((a, b) => a + b, 0);
+
+    // CATATAN: Quiz pembuka START tidak perlu save attempt karena ini hanya pengenalan
+    // Assessment yang sebenarnya ada di Journey dengan validasi nilai minimal
+    // Progress.completed untuk concern/control/curiosity/confidence hanya di-set saat AssessmentComponent passed.
 
     // Clear any message
     setStageMessage('');
@@ -304,6 +305,17 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
 
   const handleNextAfterResults = async () => {
     if (!user) return;
+    
+    // VALIDASI: Pastikan semua 4 quiz pembuka sudah diisi (concern, control, curiosity, confidence)
+    const allQuizzesCompleted = ['concern', 'control', 'curiosity', 'confidence'].every(stage => {
+      const stageAnswers = answers[stage as keyof QuizData] || [];
+      return stageAnswers.length === 6 && stageAnswers.every(ans => ans > 0);
+    });
+    
+    if (!allQuizzesCompleted) {
+      alert('Silakan selesaikan semua quiz pembuka terlebih dahulu (Concern, Control, Curiosity, Confidence)');
+      return;
+    }
     
     const { scores, total, percent, category } = calculateResults();
     
@@ -324,25 +336,12 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
       });
 
       if (response.ok) {
-        // Mark START as completed
-        try {
-          const progressRes = await fetch('/api/progress', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId: user.uid,
-              levelId: 'start',
-              score: 0,
-              completed: true
-            })
-          });
-          
-          if (progressRes.ok) {
-            console.log('[Quiz] START progress saved');
-          }
-        } catch (e) {
-          console.error('[Quiz] Failed to save START progress', e);
-        }
+        // CATATAN: JANGAN set START progress di sini!
+        // START progress hanya diset setelah SEMUA tahap START selesai:
+        // Quiz pembuka → Adaptabilitas Intro → Diary → Evaluation Process → Evaluation Result
+        // START progress akan diset di evaluation-result/page.tsx setelah semua tahap selesai
+        
+        console.log('[Quiz] Quiz pembuka selesai, lanjut ke adaptabilitas-intro');
         
         // After saving quiz results, lanjut ke sesi pengenalan adaptabilitas karir (dengan voice)
         router.push('/adaptabilitas-intro');
@@ -356,11 +355,17 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
   };
 
   const calculateResults = () => {
+    // Safe reduce: filter undefined/null dan hanya jumlahkan nilai valid (> 0)
+    const safeReduce = (arr: number[]) => {
+      return arr.filter((v): v is number => v !== undefined && v !== null && v > 0)
+        .reduce((a, b) => a + b, 0);
+    };
+    
     const scores = {
-      concern: answers.concern.reduce((a, b) => a + b, 0),
-      control: answers.control.reduce((a, b) => a + b, 0),
-      curiosity: answers.curiosity.reduce((a, b) => a + b, 0),
-      confidence: answers.confidence.reduce((a, b) => a + b, 0)
+      concern: safeReduce(answers.concern || []),
+      control: safeReduce(answers.control || []),
+      curiosity: safeReduce(answers.curiosity || []),
+      confidence: safeReduce(answers.confidence || [])
     };
 
     const total = Object.values(scores).reduce((a, b) => a + b, 0);
@@ -423,6 +428,13 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
 
   if (currentStage === 'results') {
     const { scores, total, percent, category } = calculateResults();
+    
+    // VALIDASI: Pastikan semua 4 quiz pembuka sudah diisi sebelum bisa next
+    const allQuizzesCompleted = ['concern', 'control', 'curiosity', 'confidence'].every(stage => {
+      const stageAnswers = answers[stage as keyof QuizData] || [];
+      return stageAnswers.length === 6 && stageAnswers.every(ans => ans > 0);
+    });
+    
     return (
       <div className="min-h-screen flex items-center justify-center p-4" style={{
         backgroundImage: 'url(/Background_Mulai.png)',
@@ -472,6 +484,15 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
             </div>
           </div>
 
+          {/* Validasi warning jika belum semua quiz selesai */}
+          {!allQuizzesCompleted && (
+            <div className="mt-4 p-4 bg-yellow-100 border border-yellow-400 rounded-lg">
+              <p className="text-yellow-800 font-semibold">
+                ⚠️ Silakan selesaikan semua quiz pembuka terlebih dahulu (Concern, Control, Curiosity, Confidence)
+              </p>
+            </div>
+          )}
+
           <div className="flex justify-between mt-8">
             <button
               onClick={handleHome}
@@ -481,7 +502,12 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
             </button>
             <button
               onClick={handleNextAfterResults}
-              className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors"
+              disabled={!allQuizzesCompleted}
+              className={`px-6 py-2 rounded-lg transition-colors ${
+                allQuizzesCompleted
+                  ? 'bg-green-500 text-white hover:bg-green-600'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
             >
               Next
             </button>
@@ -589,7 +615,15 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
           </button>
           <button
             onClick={handleStageComplete}
-            disabled={stageAnswers.length !== 6}
+            disabled={(() => {
+              // VALIDASI KETAT: Pastikan semua 6 pertanyaan sudah diisi
+              const allAnswered = stageAnswers.length === 6 && 
+                [0, 1, 2, 3, 4, 5].every(index => {
+                  const answer = stageAnswers[index];
+                  return answer !== undefined && answer !== null && answer > 0;
+                });
+              return !allAnswered;
+            })()}
             className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
             Next
