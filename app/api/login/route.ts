@@ -42,7 +42,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Return user data (tanpa password)
-    const { password: _password, ...userWithoutPassword } = userData;
+    const userWithoutPassword = { ...userData };
+    delete userWithoutPassword.password;
     
     return NextResponse.json({
       message: 'Login berhasil',

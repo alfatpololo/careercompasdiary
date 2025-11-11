@@ -6,7 +6,7 @@ import { GameButton } from '../components/GameUI';
 
 export default function Home() {
   const router = useRouter();
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   
   return (
     <div 

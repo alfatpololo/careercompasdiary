@@ -1,14 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Fix cache issues with Turbopack
-  experimental: {
-    turbo: {
-      resolveAlias: {
-        // Prevent cache corruption
-      },
-    },
-  },
   // Better error handling for dev mode
   onDemandEntries: {
     // Period in ms to keep pages in the buffer

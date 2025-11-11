@@ -15,31 +15,6 @@ export default function QuizPage({ params, searchParams }: { params: Promise<{ s
   const showIntro = query?.intro === '1';
   const isAssessment = query?.mode === 'assessment';
 
-  if (!user) {
-    return (
-      <div 
-        className="min-h-screen w-full relative flex items-center justify-center"
-        style={{
-          backgroundImage: 'url(/Background_Mulai.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }}
-      >
-        <div className="bg-white bg-opacity-90 rounded-lg shadow-2xl p-8 max-w-md w-full mx-4 backdrop-blur-sm text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Akses Ditolak</h2>
-          <p className="text-gray-600 mb-6">Anda harus login terlebih dahulu</p>
-          <button
-            onClick={() => router.push('/login')}
-            className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            Login
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   const allowed: readonly StageKey[] = ['concern','control','curiosity','confidence'] as const;
   const stageKey: StageKey = allowed.includes(stage as StageKey) ? (stage as StageKey) : 'concern';
 
@@ -103,6 +78,31 @@ export default function QuizPage({ params, searchParams }: { params: Promise<{ s
     
     checkUnlock();
   }, [isAssessment, stageKey, user, router]);
+
+  if (!user) {
+    return (
+      <div 
+        className="min-h-screen w-full relative flex items-center justify-center"
+        style={{
+          backgroundImage: 'url(/Background_Mulai.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        <div className="bg-white bg-opacity-90 rounded-lg shadow-2xl p-8 max-w-md w-full mx-4 backdrop-blur-sm text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Akses Ditolak</h2>
+          <p className="text-gray-600 mb-6">Anda harus login terlebih dahulu</p>
+          <button
+            onClick={() => router.push('/login')}
+            className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (isAssessment) {
     if (isUnlocked === false || isUnlocked === null) {

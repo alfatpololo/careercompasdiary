@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 
 export default function Congratulations() {
   const router = useRouter();
-  const { user } = useAuth();
+  useAuth();
 
   return (
     <div 

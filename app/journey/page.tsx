@@ -53,7 +53,7 @@ export default function JourneyMap() {
         try {
           const errorText = await res.text();
           console.error('[Journey] Failed to fetch stage:', res.status, errorText);
-        } catch (textError) {
+        } catch {
           console.error('[Journey] Failed to fetch stage:', res.status);
         }
       }
@@ -115,7 +115,7 @@ export default function JourneyMap() {
         try {
           const errorText = await prog.text();
           console.error('[Journey] ❌ Failed to fetch progress:', prog.status, errorText);
-        } catch (textError) {
+        } catch {
           console.error('[Journey] ❌ Failed to fetch progress:', prog.status);
         }
         setStartDone(false);

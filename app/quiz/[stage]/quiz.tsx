@@ -3,7 +3,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
-import { GameModal, GameButton } from '../../../components/GameUI';
+import { GameModal, GameButton, GameBadge } from '../../../components/GameUI';
+import { TextToSpeech } from '../../../components/TextToSpeech';
+import {
+  weightedAssessment,
+  weightedIntroSlides,
+  weightedStageOrder,
+  type WeightedStageId,
+} from '../../../lib/stageContent';
 
 interface QuizData {
   concern: number[];
@@ -18,135 +25,6 @@ function isQuizStage(s: string): s is QuizStage {
   return (quizStages as readonly string[]).includes(s);
 }
 
-interface IntroPopupProps {
-  onNext: () => void;
-  onClose: () => void;
-}
-
-function IntroPopup({ onNext, onClose }: IntroPopupProps) {
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl p-8 max-w-3xl max-h-[90vh] overflow-y-auto">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
-          Selamat Datang! 🌟
-        </h2>
-        
-        <div className="space-y-4 text-gray-700 text-lg leading-relaxed">
-          <p>
-            Halo, teman-teman! 👋😊 Kami ingin mengajak kalian untuk berpartisipasi dalam pengisian kuesioner ini. 
-            Kuesioner ini dirancang khusus untuk memahami bagaimana kalian merencanakan masa depan dan mengembangkan potensi diri. ✨
-          </p>
-          
-          <p>
-            Jawablah setiap pertanyaan dengan jujur sesuai dengan apa yang kalian rasakan dan pikirkan. Tidak ada jawaban benar atau salah yang terpenting adalah menjadi diri sendiri! ✅
-          </p>
-          
-          <p>
-            Kami sangat menghargai waktu dan kejujuran kalian. Hasil dari kuesioner ini akan digunakan untuk tujuan penelitian dan pengembangan, tanpa ada kepentingan lain. Jadi, yuk, bantu kami dengan mengisi kuesioner ini secara santai dan sesuai dengan jati diri kalian! 🚀💡
-          </p>
-          
-          <p>
-            Terima kasih banyak atas partisipasinya! Semoga langkah kecil ini bisa membantu kalian memahami dan merancang masa depan yang lebih cerah. 🌟💪
-          </p>
-          
-          <p className="font-semibold text-blue-600 mt-4">
-            Silakan isi setiap pertanyaan dengan jujur dan sepenuh hati. Tulis jawaban yang benar-benar mencerminkan dirimu sendiri, sesuai dengan pengalaman, pemikiran, dan perasaanmu selama ini. Tidak ada jawaban yang salah atau benar yang paling penting adalah jawaban itu datang dari dirimu sendiri, bukan karena ingin terlihat baik atau meniru orang lain.
-          </p>
-        </div>
-
-        <div className="flex justify-between mt-8">
-          <button
-            onClick={onClose}
-            className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors"
-          >
-            <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-            Home
-          </button>
-          <button
-            onClick={onNext}
-            className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors"
-          >
-            Next
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Instructions({ onNext, onClose }: IntroPopupProps) {
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl p-8 max-w-3xl max-h-[90vh] overflow-y-auto">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
-          Petunjuk Pengisian 📋
-        </h2>
-        
-        <div className="space-y-6 text-gray-700">
-          <p className="text-lg">
-            Setiap orang menggunakan kekuatan yang berbeda-beda dalam membangun karirnya. Tidak ada orang yang hebat dalam segala hal, setiap orang lebih kuat dalam beberapa hal dibanding dalam hal-hal lainnya. Silahkan anda tetapkan seberapa kuat anda mengembangkan kemampuan-kemampuan di bawah ini menggunakan skala berikut dengan memberikan tanda lingkaran pada nomor yang sesuai.
-          </p>
-          
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <h3 className="font-bold text-lg mb-3">Berikut adalah keterangan jawaban:</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex items-center">
-                <span className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold mr-2">5</span>
-                <span className="font-semibold">Paling kuat (PK)</span>
-              </div>
-              <div className="flex items-center">
-                <span className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold mr-2">4</span>
-                <span className="font-semibold">Sangat kuat (SK)</span>
-              </div>
-              <div className="flex items-center">
-                <span className="w-8 h-8 bg-yellow-500 text-white rounded-full flex items-center justify-center font-bold mr-2">3</span>
-                <span className="font-semibold">Kuat (K)</span>
-              </div>
-              <div className="flex items-center">
-                <span className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold mr-2">2</span>
-                <span className="font-semibold">Cukup kuat (CK)</span>
-              </div>
-              <div className="flex items-center">
-                <span className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center font-bold mr-2">1</span>
-                <span className="font-semibold">Tidak kuat (TK)</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-green-50 p-4 rounded-lg">
-            <h3 className="font-bold text-lg mb-2">Selanjutnya, TERDAPAT 4 KOLOM yang akan anda isi dengan jawaban yang benar-benar mencerminkan pengalaman dan kondisi nyata Anda:</h3>
-            <ol className="list-decimal list-inside space-y-2 ml-2">
-              <li>Career concern</li>
-              <li>Career control</li>
-              <li>Career curiosity</li>
-              <li>Career confidence</li>
-            </ol>
-          </div>
-        </div>
-
-        <div className="flex justify-between mt-8">
-          <button
-            onClick={onClose}
-            className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors flex items-center"
-          >
-            <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-            Home
-          </button>
-          <button
-            onClick={onNext}
-            className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors"
-          >
-            Next
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export function QuizComponent({ initialStage = 'concern', showIntroDefault = false }: { initialStage?: 'concern'|'control'|'curiosity'|'confidence', showIntroDefault?: boolean }) {
   const router = useRouter();
@@ -161,48 +39,6 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
     confidence: []
   });
   const [stageMessage, setStageMessage] = useState<string>('');
-
-  const stageThresholds: Record<'concern'|'control'|'curiosity'|'confidence', number> = {
-    concern: 18,      // minimal total 18 dari 6 soal (rata-rata 3)
-    control: 18,
-    curiosity: 18,
-    confidence: 18,
-  };
-
-  async function saveStageAttempt(stage: keyof QuizData, stageScore: number, passed: boolean) {
-    try {
-      await fetch('/api/stage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user?.uid,
-          stage,
-          answers: answers[stage],
-          score: stageScore,
-          passed,
-        })
-      });
-    } catch (e) {
-      console.error('Failed to save stage attempt', e);
-    }
-  }
-
-  async function updateUserProgress(stage: keyof QuizData, score: number, completed: boolean) {
-    try {
-      await fetch('/api/progress', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user?.uid,
-          levelId: stage,
-          score,
-          completed
-        })
-      });
-    } catch (e) {
-      console.error('Failed to update user progress', e);
-    }
-  }
 
   const questions = {
     concern: [
@@ -280,23 +116,14 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
       return;
     }
 
-    // START: Tidak perlu cek nilai minimal, cukup semua pertanyaan diisi langsung next
-    // Calculate score hanya untuk display di results, tidak untuk validasi
-    const stageScore = stageAnswers.reduce((a, b) => a + b, 0);
-
-    // CATATAN: Quiz pembuka START tidak perlu save attempt karena ini hanya pengenalan
-    // Assessment yang sebenarnya ada di Journey dengan validasi nilai minimal
-    // Progress.completed untuk concern/control/curiosity/confidence hanya di-set saat AssessmentComponent passed.
-
     // Clear any message
     setStageMessage('');
 
     // Move to next quiz stage without showing results until the end
-    const stageOrder = ['concern', 'control', 'curiosity', 'confidence'];
-    const currentStageIndex = stageOrder.indexOf(currentStage);
+    const currentStageIndex = weightedStageOrder.indexOf(currentStage as WeightedStageId);
 
-    if (currentStageIndex < 3) {
-      const nextStage = stageOrder[currentStageIndex + 1] as 'control' | 'curiosity' | 'confidence';
+    if (currentStageIndex < weightedStageOrder.length - 1) {
+      const nextStage = weightedStageOrder[currentStageIndex + 1] as 'control' | 'curiosity' | 'confidence';
       setCurrentStage(nextStage);
     } else {
       setCurrentStage('results');
@@ -646,50 +473,109 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
 type MCQ = { q: string; options: string[]; correct: number };
 
 const assessmentBank: Record<'concern'|'control'|'curiosity'|'confidence', MCQ[]> = {
-  concern: [
-    { q: 'Langkah pertama paling tepat untuk mulai merencanakan karier?', options: ['Menunggu kesempatan datang', 'Menyusun tujuan jangka pendek dan panjang', 'Mengumpulkan sertifikat secara acak', 'Mengabaikan minat pribadi'], correct: 1 },
-    { q: 'Aktivitas paling mendukung kepedulian karier?', options: ['Bermain game sepanjang hari', 'Refleksi masa depan 5–10 tahun', 'Mengikuti tren tanpa rencana', 'Menunda keputusan'], correct: 1 },
-    { q: 'Pilihan hari ini berpengaruh pada masa depan karena?', options: ['Tidak ada pengaruh', 'Menentukan keterampilan & jalur belajar', 'Hanya urusan guru', 'Ditentukan teman'], correct: 1 },
-    { q: 'Contoh langkah konkret concern?', options: ['Membuat rencana belajar mingguan', 'Scroll media sosial', 'Bolos sekolah', 'Acak jurusan'], correct: 0 },
-    { q: 'Alat bantu untuk memetakan tujuan?', options: ['SWOT & timeline target', 'Gacha', 'Chat random', 'Spam tugas'], correct: 0 },
-    { q: 'Dokumen untuk merencanakan karier?', options: ['Learning plan', 'Surat izin', 'Kwitansi', 'Form kosong'], correct: 0 },
-  ],
-  control: [
-    { q: 'Sikap kontrol karier yang benar?', options: ['Mengandalkan orang lain', 'Mengambil keputusan mandiri & bertanggung jawab', 'Menunda semua hal', 'Mengikuti mayoritas'], correct: 1 },
-    { q: 'Contoh kontrol waktu yang baik?', options: ['To-do list prioritas', 'Begadang tiap hari', 'Menunggu mood', 'Menolak semua tugas'], correct: 0 },
-    { q: 'Jika ada distraksi teman?', options: ['Ikut saja', 'Tetap pada rencana', 'Marah', 'Menyerah'], correct: 1 },
-    { q: 'Evaluasi keputusan dilakukan?', options: ['Berkala sesuai target', 'Tidak perlu', 'Saat ujian saja', 'Hanya saat diminta'], correct: 0 },
-    { q: 'Tanda punya kontrol yang baik?', options: ['Konsisten eksekusi rencana', 'Gonta-ganti tujuan', 'Banyak alasan', 'Menghindar'], correct: 0 },
-    { q: 'Respon pada kegagalan?', options: ['Salahkan orang lain', 'Refleksi & perbaiki strategi', 'Putus asa', 'Diam'], correct: 1 },
-  ],
-  curiosity: [
-    { q: 'Cara mengeksplorasi profesi?', options: ['Wawancara alumni/kunjungan industri', 'Tidur siang', 'Spam email', 'Menutup diri'], correct: 0 },
-    { q: 'Sebelum memilih jurusan?', options: ['Bandingkan beberapa jalur alternatif', 'Pilih acak', 'Ikut teman', 'Tidak perlu info'], correct: 0 },
-    { q: 'Sikap ingin tahu ditunjukkan dengan?', options: ['Bertanya ke praktisi', 'Diam saja', 'Takut tanya', 'Menghindari info'], correct: 0 },
-    { q: 'Aktivitas yang menumbuhkan curiosity?', options: ['Webinar/kelas singkat', 'Main terus', 'Gosip', 'AFK'], correct: 0 },
-    { q: 'Alasan penting eksplorasi?', options: ['Menemukan cocoknya minat & bakat', 'Biar gaya', 'Ikut-ikutan', 'Biar trending'], correct: 0 },
-    { q: 'Contoh praktik curiosity di sekolah?', options: ['Ikut ekstra relevan', 'Bolak-balik kantin', 'Skip tugas', 'Acak club'], correct: 0 },
-  ],
-  confidence: [
-    { q: 'Percaya diri dibangun dengan?', options: ['Latihan & pengalaman kecil', 'Menunggu aja', 'Membandingkan diri', 'Menyerah'], correct: 0 },
-    { q: 'Jika dapat tugas presentasi?', options: ['Siapkan & berlatih', 'Tidak usah latihan', 'Kabur', 'Menunda'], correct: 0 },
-    { q: 'Saat hambatan muncul?', options: ['Cari solusi', 'Marah', 'Menghindar', 'Menyalahkan'], correct: 0 },
-    { q: 'Belajar skill baru?', options: ['Percaya bisa belajar bertahap', 'Tidak mungkin', 'Tunggu bakat', 'Serah'], correct: 0 },
-    { q: 'Indikator confidence meningkat?', options: ['Berani ambil peran', 'Mengecilkan diri', 'Pasif', 'Menolak semua'], correct: 0 },
-    { q: 'Cara menjaga konsistensi?', options: ['Target kecil harian', 'Acak jadwal', 'Ikut mood', 'Tanpa catatan'], correct: 0 },
-  ],
+  concern: [],
+  control: [],
+  curiosity: [],
+  confidence: [],
 };
 
 export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'curiosity'|'confidence' }) {
   const router = useRouter();
   const { user } = useAuth();
-  const questions = assessmentBank[stage];
+  const isWeightedStage = stage === 'concern' || stage === 'control' || stage === 'curiosity' || stage === 'confidence';
+  const weightedStage = isWeightedStage ? stage as 'concern'|'control'|'curiosity'|'confidence' : null;
+  const mcqQuestions = assessmentBank[stage];
+  const weightedQuestions = weightedStage ? weightedAssessment[weightedStage] : [];
+  const questions = isWeightedStage ? weightedQuestions : mcqQuestions;
+  const introSlides = weightedStage ? weightedIntroSlides[weightedStage] : [];
+  const [introStep, setIntroStep] = useState(weightedStage ? 0 : 0);
   const [answers, setAnswers] = useState<number[]>(Array(questions.length).fill(-1));
-  const [message, setMessage] = useState<string>('');
-  const [modal, setModal] = useState<null | { type: 'success' | 'fail'; correct: number }>(null);
-  const passThreshold = 4; // minimal benar 4/6
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [modal, setModal] = useState<null | { type: 'success' | 'fail'; correct: number; detail?: { totalScore: number; maxScore: number; percent: number } }>(null);
+  const passThreshold = 4; // minimal benar 4/6 untuk stage lain
+  const weightedMaxScore = weightedStage ? weightedQuestions.length * 40 : 0;
+  const weightedPassThreshold = weightedStage ? Math.round(weightedMaxScore * 0.7) : 0; // minimal 70% dari total
 
   const answeredAll = answers.every(a => a >= 0);
+  const totalQuestions = questions.length;
+  const currentAnswer = answers[currentQuestion] ?? -1;
+  const canProceed = !isWeightedStage || currentAnswer >= 0;
+  const weightedItems = isWeightedStage ? weightedQuestions : [];
+  const weightedTitleMap: Record<'concern'|'control'|'curiosity'|'confidence', string> = {
+    concern: 'Concern Assessment',
+    control: 'Control Assessment',
+    curiosity: 'Curiosity Assessment',
+    confidence: 'Confidence Assessment',
+  };
+  const weightedPromptMap: Record<'concern'|'control'|'curiosity'|'confidence', string> = {
+    concern: 'kepedulianmu terhadap karier',
+    control: 'kendali dirimu dalam mengambil keputusan karier',
+    curiosity: 'rasa ingin tahumu dalam eksplorasi karier',
+    confidence: 'kepercayaan dirimu dalam menghadapi tantangan karier',
+  };
+  const weightedSuccessActions: Record<'concern'|'control'|'curiosity'|'confidence', Array<{ href: string; label: string; className: string }>> = {
+    concern: [
+      { href: '/concern/diary', label: 'Catatan Harian Concern', className: 'from-yellow-300 to-orange-400' },
+      { href: '/concern/evaluation-process-student', label: 'Evaluasi Siswa Concern', className: 'from-emerald-400 to-teal-500' },
+      { href: '/concern', label: 'Menu Concern', className: 'from-indigo-400 to-purple-500' },
+    ],
+    control: [
+      { href: '/control/diary', label: 'Catatan Harian Control', className: 'from-yellow-300 to-orange-400' },
+      { href: '/control/evaluation-process-student', label: 'Evaluasi Siswa Control', className: 'from-emerald-400 to-teal-500' },
+      { href: '/control', label: 'Menu Control', className: 'from-indigo-400 to-purple-500' },
+    ],
+    curiosity: [
+      { href: '/curiosity/diary', label: 'Catatan Harian Curiosity', className: 'from-yellow-300 to-orange-400' },
+      { href: '/curiosity/evaluation-process-student', label: 'Evaluasi Siswa Curiosity', className: 'from-emerald-400 to-teal-500' },
+      { href: '/curiosity', label: 'Menu Curiosity', className: 'from-indigo-400 to-purple-500' },
+    ],
+    confidence: [
+      { href: '/confidence/diary', label: 'Catatan Harian Confidence', className: 'from-yellow-300 to-orange-400' },
+      { href: '/confidence/evaluation-process-student', label: 'Evaluasi Siswa Confidence', className: 'from-emerald-400 to-teal-500' },
+      { href: '/confidence', label: 'Menu Confidence', className: 'from-indigo-400 to-purple-500' },
+    ],
+  };
+
+  const handlePrevQuestion = () => {
+    if (!isWeightedStage) return;
+    setCurrentQuestion((prev) => Math.max(prev - 1, 0));
+  };
+
+  const handleNextQuestion = () => {
+    if (!isWeightedStage) return;
+    if (currentQuestion < totalQuestions - 1) {
+      setCurrentQuestion((prev) => Math.min(prev + 1, totalQuestions - 1));
+    }
+  };
+
+  if (isWeightedStage && introStep < introSlides.length) {
+    const slide = introSlides[introStep];
+    const voiceText = slide.paragraphs.join(' ');
+    const isLastSlide = introStep === introSlides.length - 1;
+
+    return (
+      <GameModal
+        open={true}
+        onClose={() => router.push('/journey')}
+        title={<span>{slide.title}</span>}
+        right={
+          <div className="flex flex-col gap-3">
+            <TextToSpeech text={voiceText} className="bg-white/80 rounded-full p-3 shadow-lg hover:scale-105 transition-transform" />
+            <GameButton onClick={() => router.push('/journey')}>Home</GameButton>
+            <GameButton onClick={() => setIntroStep((prev) => prev + 1)} className="from-green-400 to-green-600">
+              {isLastSlide ? 'Mulai Soal' : 'Next'}
+            </GameButton>
+          </div>
+        }
+      >
+        <div className="space-y-4 text-emerald-900 font-semibold whitespace-pre-line">
+          {slide.paragraphs.map((paragraph, idx) => (
+            <p key={`${slide.key}-${idx}`}>{paragraph}</p>
+          ))}
+        </div>
+      </GameModal>
+    );
+  }
 
   const handleChoose = (qIdx: number, optIdx: number) => {
     const copy = [...answers];
@@ -699,8 +585,21 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
 
   const submit = async () => {
     if (!answeredAll || !user) return;
-    const correctCount = answers.reduce((sum, a, idx) => sum + (a === questions[idx].correct ? 1 : 0), 0);
-    const passed = correctCount >= passThreshold;
+    const weightedScore = isWeightedStage
+      ? answers.reduce((sum, a, idx) => {
+          if (a < 0) return sum;
+          const selected = weightedQuestions[idx]?.options[a];
+          return sum + (selected?.score || 0);
+        }, 0)
+      : 0;
+    const correctCount = isWeightedStage
+      ? weightedScore
+      : answers.reduce((sum, a, idx) => sum + (a === mcqQuestions[idx].correct ? 1 : 0), 0);
+
+    const passed = isWeightedStage ? weightedScore >= weightedPassThreshold : correctCount >= passThreshold;
+    const percentScore = isWeightedStage
+      ? (weightedMaxScore > 0 ? Math.round((weightedScore / weightedMaxScore) * 100) : 0)
+      : Math.round((correctCount / mcqQuestions.length) * 100);
 
     // Save attempt and progress
     try {
@@ -711,24 +610,44 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
           userId: user.uid,
           stage,
           answers,
-          score: correctCount,
+          score: percentScore,
           passed,
         }),
       });
       await fetch('/api/progress', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.uid, levelId: stage, score: correctCount, completed: passed })
+        body: JSON.stringify({
+          userId: user.uid,
+          levelId: stage,
+          score: percentScore,
+          completed: passed
+        })
       });
     } catch (e) {
       console.error(e);
     }
 
-    if (passed) {
-      setModal({ type: 'success', correct: correctCount });
-    } else {
-      setModal({ type: 'fail', correct: correctCount });
-    }
+    const modalPayload: {
+      type: 'success' | 'fail';
+      correct: number;
+      detail?: { totalScore: number; maxScore: number; percent: number };
+    } = isWeightedStage
+      ? {
+          type: passed ? 'success' : 'fail',
+          correct: weightedScore,
+          detail: {
+            totalScore: weightedScore,
+            maxScore: weightedMaxScore,
+            percent: percentScore,
+          },
+        }
+      : {
+          type: passed ? 'success' : 'fail',
+          correct: correctCount,
+        };
+
+    setModal(modalPayload);
   };
 
   return (
@@ -745,31 +664,104 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 pt-24">
-          {questions.map((item, qIdx) => (
-            <div key={qIdx} className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-lg shadow-lg p-4 text-white">
-              <p className="text-xs font-semibold mb-3">{qIdx + 1}. {item.q}</p>
-              <div className="space-y-2">
-                {item.options.map((opt, optIdx) => (
+        {isWeightedStage ? (
+          <div className="pt-24 space-y-6">
+            <div className="flex items-start justify-between text-white">
+              <div>
+                <GameBadge className="bg-white/25 text-emerald-900 border-white">
+                  {weightedStage ? weightedTitleMap[weightedStage] : 'Weighted Assessment'}
+                </GameBadge>
+                <h2 className="text-3xl font-extrabold drop-shadow mt-2">
+                  Pertanyaan {currentQuestion + 1} dari {totalQuestions}
+                </h2>
+                <p className="text-white/85 font-semibold">
+                  Pilih jawaban yang paling menggambarkan {weightedStage ? weightedPromptMap[weightedStage] : 'persepsimu'}.
+                </p>
+              </div>
+              <div className="text-right text-white/80 text-sm font-semibold">
+                <p>Bobot jawaban: 10% – 40%</p>
+                <p>Minimal kelulusan: 70%</p>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-lg shadow-lg p-6 text-white">
+              <p className="text-base font-bold mb-4">
+                {currentQuestion + 1}. {weightedItems[currentQuestion]?.q}
+              </p>
+              <div className="space-y-3">
+                {weightedItems[currentQuestion]?.options.map((opt, optIdx) => (
                   <button
                     key={optIdx}
-                    onClick={() => handleChoose(qIdx, optIdx)}
-                    className={`w-full text-left px-3 py-2 rounded bg-white/15 hover:bg-white/25 transition-colors text-xs ${answers[qIdx] === optIdx ? 'ring-2 ring-white' : ''}`}
+                    onClick={() => handleChoose(currentQuestion, optIdx)}
+                    className={`w-full text-left px-3 py-2 rounded bg-white/15 hover:bg-white/25 transition-colors text-sm ${
+                      answers[currentQuestion] === optIdx ? 'ring-2 ring-white' : ''
+                    }`}
                   >
-                    {String.fromCharCode(65 + optIdx)}. {opt}
+                    <span className="block font-semibold">
+                      {String.fromCharCode(65 + optIdx)}. {opt.text}
+                    </span>
+                    <span className="text-[11px] uppercase tracking-wide text-yellow-200 font-bold">
+                      Bobot: {opt.score}%
+                    </span>
                   </button>
                 ))}
               </div>
             </div>
-          ))}
-        </div>
 
-        <div className="flex justify-between mt-6">
-          <button onClick={() => router.push('/journey')} className="bg-gray-500 text-white px-5 py-2 rounded-lg hover:bg-gray-600">Home</button>
-          <button disabled={!answeredAll} onClick={submit} className="bg-green-500 disabled:bg-gray-300 text-white px-6 py-2 rounded-lg hover:bg-green-600">Submit</button>
-        </div>
+            <div className="flex justify-between">
+              <GameButton onClick={() => router.push('/journey')} className="from-gray-400 to-gray-600">
+                Home
+              </GameButton>
+              <div className="flex gap-3">
+                {currentQuestion > 0 && (
+                  <GameButton
+                    type="button"
+                    onClick={handlePrevQuestion}
+                    className="from-blue-400 to-blue-600"
+                  >
+                    Sebelumnya
+                  </GameButton>
+                )}
+                <GameButton
+                  type="button"
+                  onClick={currentQuestion === totalQuestions - 1 ? submit : handleNextQuestion}
+                  disabled={!canProceed}
+                  className="from-yellow-300 to-orange-400 disabled:opacity-60 disabled:pointer-events-none"
+                >
+                  {currentQuestion === totalQuestions - 1 ? 'Submit' : 'Selanjutnya'}
+                </GameButton>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-3 gap-3 pt-24">
+              {questions.map((item, qIdx) => (
+                <div key={qIdx} className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-lg shadow-lg p-4 text-white">
+                  <p className="text-xs font-semibold mb-3">{qIdx + 1}. {item.q}</p>
+                  <div className="space-y-2">
+                    {(item as MCQ).options.map((opt, optIdx) => (
+                      <button
+                        key={optIdx}
+                        onClick={() => handleChoose(qIdx, optIdx)}
+                        className={`w-full text-left px-3 py-2 rounded bg-white/15 hover:bg-white/25 transition-colors text-xs ${
+                          answers[qIdx] === optIdx ? 'ring-2 ring-white' : ''
+                        }`}
+                      >
+                        {String.fromCharCode(65 + optIdx)}. {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
 
-        {message && <div className="text-center mt-3 text-yellow-200 font-semibold">{message}</div>}
+            <div className="flex justify-between mt-6">
+              <button onClick={() => router.push('/journey')} className="bg-gray-500 text-white px-5 py-2 rounded-lg hover:bg-gray-600">Home</button>
+              <button disabled={!answeredAll} onClick={submit} className="bg-green-500 disabled:bg-gray-300 text-white px-6 py-2 rounded-lg hover:bg-green-600">Submit</button>
+            </div>
+          </>
+        )}
 
         {modal && (
           <GameModal
@@ -779,18 +771,52 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
             right={
               modal.type === 'success' ? (
                 <div className="flex flex-col gap-3">
-                  <GameButton onClick={() => router.push('/journey?refresh=true')}>Kembali ke Journey</GameButton>
+                  {weightedStage &&
+                    weightedSuccessActions[weightedStage].map((item) => (
+                      <GameButton key={item.href} onClick={() => router.push(item.href)} className={item.className}>
+                        {item.label}
+                      </GameButton>
+                    ))}
+                  <GameButton onClick={() => router.push('/journey?refresh=true')} className="from-gray-400 to-gray-600">
+                    Kembali ke Journey
+                  </GameButton>
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
-                  <GameButton onClick={() => { setModal(null); setAnswers(Array(questions.length).fill(-1)); }} className="from-blue-400 to-blue-600">Ulang Stage</GameButton>
-                  <GameButton onClick={() => router.push('/journey?refresh=true')}>Kembali ke Journey</GameButton>
+                  <GameButton
+                    onClick={() => {
+                      setModal(null);
+                      setAnswers(Array(questions.length).fill(-1));
+                      if (isWeightedStage) {
+                        setCurrentQuestion(0);
+                      }
+                    }}
+                    className="from-blue-400 to-blue-600"
+                  >
+                    Ulang Stage
+                  </GameButton>
+                  <GameButton onClick={() => router.push('/journey?refresh=true')} className="from-gray-400 to-gray-600">Kembali ke Journey</GameButton>
                 </div>
               )
             }
           >
-            <p className="text-emerald-900 font-bold">Jawaban benar: {modal.correct} / {questions.length}</p>
-            {modal.type === 'fail' && <p className="text-emerald-900 mt-2 font-semibold">Coba ulang atau kembali ke Start untuk belajar lagi.</p>}
+            {isWeightedStage ? (
+              <div className="space-y-2 text-emerald-900 font-bold">
+                <p>Skor total: {modal.detail?.totalScore} / {modal.detail?.maxScore}</p>
+                <p>Persentase: {modal.detail?.percent}%</p>
+                <p>Target kelulusan: 70%</p>
+                {modal.type === 'fail' && (
+                  <p className="font-semibold">
+                    Pilih jawaban yang paling menggambarkan {weightedStage ? weightedPromptMap[weightedStage] : 'dirimu'} untuk mencapai target nilai.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <>
+                <p className="text-emerald-900 font-bold">Jawaban benar: {modal.correct} / {questions.length}</p>
+                {modal.type === 'fail' && <p className="text-emerald-900 mt-2 font-semibold">Coba ulang atau kembali ke Start untuk belajar lagi.</p>}
+              </>
+            )}
           </GameModal>
         )}
       </div>

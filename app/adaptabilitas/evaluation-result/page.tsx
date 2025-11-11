@@ -94,9 +94,20 @@ export default function EvaluationResult() {
         const verifyRes = await fetch(`/api/progress?userId=${encodeURIComponent(user.uid)}`);
         if (verifyRes.ok) {
           const verifyData = await verifyRes.json();
-          const verifyArr = verifyData?.data?.progress || [];
-          const startFound = verifyArr.find((p: any) => p.levelId === 'start' && p.completed === true);
-          console.log('[Evaluation Result] ✅ Verification - START found in progress:', !!startFound, verifyArr);
+          const verifyArr = verifyData?.data?.progress;
+
+          type ProgressRecord = { levelId?: string; completed?: boolean };
+          const startFound =
+            Array.isArray(verifyArr) &&
+            verifyArr.some((entry): entry is ProgressRecord => {
+              if (!entry || typeof entry !== 'object') {
+                return false;
+              }
+              const record = entry as { levelId?: unknown; completed?: unknown };
+              return record.levelId === 'start' && record.completed === true;
+            });
+
+          console.log('[Evaluation Result] ✅ Verification - START found in progress:', startFound, verifyArr);
           
           if (!startFound) {
             console.warn('[Evaluation Result] ⚠️ WARNING: START progress not found in verification!');

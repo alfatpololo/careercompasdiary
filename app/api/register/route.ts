@@ -7,7 +7,6 @@ export async function POST(request: NextRequest) {
     
     const { 
       username, 
-      password, 
       usia, 
       jenisKelamin, 
       alamat, 
