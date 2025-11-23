@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
-import { GameCard, GameButton } from '../../../components/GameUI';
+import { GameCard, GameButton, LoadingSpinner } from '../../../components/GameUI';
 
-export default function DiaryForm() {
+function DiaryFormContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
+  const isPosttest = searchParams?.get('posttest') === 'true';
   const [formData, setFormData] = useState({
     nama: user?.displayName || user?.email || '',
     tanggal: new Date().toISOString().split('T')[0],
@@ -30,7 +32,12 @@ export default function DiaryForm() {
 
       if (response.ok) {
         alert('Catatan harian berhasil disimpan!');
-        router.push('/adaptabilitas/evaluation-process');
+        // Redirect ke evaluation-process dengan query parameter posttest jika ini posttest
+        if (isPosttest) {
+          router.push('/adaptabilitas/evaluation-process?posttest=true');
+        } else {
+          router.push('/adaptabilitas/evaluation-process');
+        }
       } else {
         alert('Terjadi kesalahan saat menyimpan catatan');
       }
@@ -64,7 +71,7 @@ export default function DiaryForm() {
           {/* LEFT PANEL */}
           <div className="flex flex-col justify-center">
             <h2 className="text-4xl font-extrabold text-white drop-shadow mb-3">Catatan Harian</h2>
-            <p className="text-white/90 font-semibold mb-4">Tulis pemahamanmu tentang karier setelah sesi Adaptabilitas Karier.</p>
+            <p className="text-white/90 font-semibold mb-4">Apa yang kamu pahami hari ini tentang adaptabilitas karier?</p>
             <ul className="text-white/90 text-sm list-disc ml-5 space-y-1">
               <li>Tulis jujur dengan bahasamu sendiri.</li>
               <li>Contoh: apa yang kamu pelajari, apa rencanamu, tantangan dan solusi.</li>
@@ -105,7 +112,7 @@ export default function DiaryForm() {
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-extrabold text-white mb-2 drop-shadow">Ceritakan pemahamanmu tentang karier itu</label>
+                <label className="block text-sm font-extrabold text-white mb-2 drop-shadow">Apa yang kamu pahami hari ini tentang adaptabilitas karier?</label>
                 <textarea
                   value={formData.isi}
                   onChange={(e) => setFormData({...formData, isi: e.target.value})}
@@ -124,5 +131,24 @@ export default function DiaryForm() {
         </div>
       </GameCard>
     </div>
+  );
+}
+
+export default function DiaryForm() {
+  return (
+    <Suspense fallback={
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          backgroundImage: 'url(/Background_Mulai.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <LoadingSpinner size="lg" text="Memuat..." fullScreen={false} />
+      </div>
+    }>
+      <DiaryFormContent />
+    </Suspense>
   );
 }

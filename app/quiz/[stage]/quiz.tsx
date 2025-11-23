@@ -3,13 +3,15 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
-import { GameModal, GameButton, GameBadge } from '../../../components/GameUI';
+import { GameModal, GameButton, GameBadge, LoadingOverlay } from '../../../components/GameUI';
 import { TextToSpeech } from '../../../components/TextToSpeech';
 import {
   weightedAssessment,
   weightedIntroSlides,
   weightedStageOrder,
   type WeightedStageId,
+  scoreToCategory,
+  getCategoryInfo,
 } from '../../../lib/stageContent';
 
 interface QuizData {
@@ -26,7 +28,7 @@ function isQuizStage(s: string): s is QuizStage {
 }
 
 
-export function QuizComponent({ initialStage = 'concern', showIntroDefault = false }: { initialStage?: 'concern'|'control'|'curiosity'|'confidence', showIntroDefault?: boolean }) {
+export function QuizComponent({ initialStage = 'concern', showIntroDefault = false, isPosttest = false }: { initialStage?: 'concern'|'control'|'curiosity'|'confidence', showIntroDefault?: boolean, isPosttest?: boolean }) {
   const router = useRouter();
   const { user } = useAuth();
   const [showIntro, setShowIntro] = useState(showIntroDefault);
@@ -39,6 +41,7 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
     confidence: []
   });
   const [stageMessage, setStageMessage] = useState<string>('');
+  const [submitting, setSubmitting] = useState<boolean>(false);
 
   const questions = {
     concern: [
@@ -146,6 +149,7 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
     
     const { scores, total, percent, category } = calculateResults();
     
+    setSubmitting(true);
     try {
       const response = await fetch('/api/quiz', {
         method: 'POST',
@@ -158,26 +162,34 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
           scores,
           total,
           percent,
-          category
+          category,
+          isPosttest: isPosttest || false
         }),
       });
 
       if (response.ok) {
-        // CATATAN: JANGAN set START progress di sini!
-        // START progress hanya diset setelah SEMUA tahap START selesai:
-        // Quiz pembuka → Adaptabilitas Intro → Diary → Evaluation Process → Evaluation Result
-        // START progress akan diset di evaluation-result/page.tsx setelah semua tahap selesai
+        // Flow berbeda untuk pretest dan posttest
+        // Pretest: Quiz → Adaptabilitas Intro → Diary → Evaluation Process → Evaluation Result
+        // Posttest: Quiz → Diary → Evaluation Process → Evaluation Result (skip intro)
+        console.log('[Quiz] Quiz selesai');
         
-        console.log('[Quiz] Quiz pembuka selesai, lanjut ke adaptabilitas-intro');
-        
-        // After saving quiz results, lanjut ke sesi pengenalan adaptabilitas karir (dengan voice)
-        router.push('/adaptabilitas-intro');
+        if (isPosttest) {
+          // Posttest: langsung ke diary, skip intro
+          console.log('[Quiz] Posttest - langsung ke diary');
+          router.push('/adaptabilitas/diary?posttest=true');
+        } else {
+          // Pretest: lanjut ke adaptabilitas intro
+          console.log('[Quiz] Pretest - lanjut ke adaptabilitas-intro');
+          router.push('/adaptabilitas-intro');
+        }
       } else {
         alert('Terjadi kesalahan saat menyimpan hasil');
       }
     } catch (error) {
       console.error('Error saving quiz results:', error);
       alert('Terjadi kesalahan saat menyimpan hasil');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -209,47 +221,95 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
 
   if (showIntro) {
     return (
-      <GameModal
-        open={true}
-        onClose={handleHome}
-        title={<span>Selamat Datang! 🌟</span>}
-        right={
-          <div className="flex flex-col gap-3">
-            <GameButton onClick={handleHome}>Home</GameButton>
-            <GameButton onClick={handleIntroNext} className="from-green-400 to-green-600">Next</GameButton>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/70" onClick={handleHome} />
+        <div className="relative w-full max-w-4xl">
+          <div className="bg-gradient-to-b from-yellow-200 via-yellow-300 to-yellow-400 rounded-[28px] overflow-hidden border-4 border-white/70 shadow-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-2xl md:text-3xl font-extrabold text-emerald-700 drop-shadow">
+                {isPosttest ? 'Posttest Adaptabilitas Karier 📊' : 'Selamat Datang! 🌟'}
+              </h3>
+              <button
+                onClick={handleHome}
+                className="text-emerald-700 hover:text-emerald-900 transition-colors p-1 rounded-full hover:bg-white/20"
+                aria-label="Tutup"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 custom-scroll">
+              <div className="space-y-3 text-emerald-900 whitespace-pre-line">
+                <p>Halo, teman-teman! 👋😊</p>
+                <p>Kami ingin mengajak kalian untuk berpartisipasi dalam pengisian kuesioner ini. Kuesioner ini dirancang khusus untuk memahami bagaimana kalian merencanakan masa depan dan mengembangkan potensi diri. ✨</p>
+                <p>Jawablah setiap pertanyaan dengan jujur sesuai dengan apa yang kalian rasakan dan pikirkan. Tidak ada jawaban benar atau salah yang terpenting adalah menjadi diri sendiri! ✅</p>
+                <p>Kami sangat menghargai waktu dan kejujuran kalian. Hasil dari kuesioner ini akan digunakan untuk tujuan penelitian dan pengembangan, tanpa ada kepentingan lain. Jadi, yuk, bantu kami dengan mengisi kuesioner ini secara santai dan sesuai dengan jati diri kalian! 🚀💡</p>
+                <p>Terima kasih banyak atas partisipasinya! Semoga langkah kecil ini bisa membantu kalian memahami dan merancang masa depan yang lebih cerah. 🌟💪</p>
+                <p className="mt-4 pt-4 border-t-2 border-emerald-200">Silakan isi setiap pertanyaan dengan jujur dan sepenuh hati. Tulis jawaban yang benar-benar mencerminkan dirimu sendiri, sesuai dengan pengalaman, pemikiran, dan perasaanmu selama ini. Tidak ada jawaban yang salah atau benar yang paling penting adalah jawaban itu datang dari dirimu sendiri, bukan karena ingin terlihat baik atau meniru orang lain.</p>
+              </div>
+              
+              {/* Buttons di bawah - kanan kiri */}
+              <div className="flex justify-between gap-3 pt-4 border-t-2 border-emerald-200">
+                <GameButton onClick={handleHome}>Home</GameButton>
+                <GameButton onClick={handleIntroNext} className="from-green-400 to-green-600">Next</GameButton>
+              </div>
+            </div>
           </div>
-        }
-      >
-        <div className="space-y-3 text-emerald-900 font-semibold">
-          <p>Halo, teman-teman! 👋😊 Kuesioner ini membantu kamu memahami arah masa depan dan potensi diri.</p>
-          <p>Jawablah dengan jujur; tidak ada jawaban benar/salah. Jadi diri sendiri! ✅</p>
-          <p>Kami menghargai kejujuranmu. Hasil digunakan untuk pengembangan belajar. 🚀</p>
         </div>
-      </GameModal>
+      </div>
     );
   }
 
   if (showInstructions) {
     return (
-      <GameModal
-        open={true}
-        onClose={handleHome}
-        title={<span>Petunjuk Pengisian 📋</span>}
-        right={
-          <div className="flex flex-col gap-3">
-            <GameButton onClick={handleHome}>Home</GameButton>
-            <GameButton onClick={handleInstructionsNext} className="from-green-400 to-green-600">Mulai</GameButton>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/70" onClick={handleHome} />
+        <div className="relative w-full max-w-4xl">
+          <div className="bg-gradient-to-b from-yellow-200 via-yellow-300 to-yellow-400 rounded-[28px] overflow-hidden border-4 border-white/70 shadow-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-2xl md:text-3xl font-extrabold text-emerald-700 drop-shadow">Petunjuk Pengisian 📋</h3>
+              <button
+                onClick={handleHome}
+                className="text-emerald-700 hover:text-emerald-900 transition-colors p-1 rounded-full hover:bg-white/20"
+                aria-label="Tutup"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 custom-scroll">
+              <div className="space-y-3 text-emerald-900 whitespace-pre-line">
+                <p>Setiap orang menggunakan kekuatan yang berbeda-beda dalam membangun karirnya. Tidak ada orang yang hebat dalam segala hal, setiap orang lebih kuat dalam beberapa hal dibanding dalam hal-hal lainnya. Silahkan anda tetapkan seberapa kuat anda mengembangkan kemampuan-kemampuan di bawah ini menggunakan skala berikut dengan memberikan tanda lingkaran pada nomor yang sesuai.</p>
+                <p>Berikut adalah keterangan jawaban:</p>
+                <ul className="list-disc ml-5 space-y-1">
+                  <li>5 = Paling kuat (PK)</li>
+                  <li>4 = Sangat kuat (SK)</li>
+                  <li>3 = Kuat (K)</li>
+                  <li>2 = Cukup kuat (CK)</li>
+                  <li>1 = Tidak kuat (TK)</li>
+                </ul>
+                <p>Selanjutnya, TERDAPAT 4 KOLOM yang akan anda isi dengan jawaban yang benar‑benar mencerminkan pengalaman dan kondisi nyata Anda.</p>
+                <ol className="list-decimal ml-5 space-y-1">
+                  <li>Career concern</li>
+                  <li>Career control</li>
+                  <li>Career curiosity</li>
+                  <li>Career confidence.</li>
+                </ol>
+              </div>
+              
+              {/* Buttons di bawah - kanan kiri */}
+              <div className="flex justify-between gap-3 pt-4 border-t-2 border-emerald-200">
+                <GameButton onClick={handleHome}>Home</GameButton>
+                <GameButton onClick={handleInstructionsNext} className="from-green-400 to-green-600">Mulai</GameButton>
+              </div>
+            </div>
           </div>
-        }
-      >
-        <div className="space-y-3 text-emerald-900 font-semibold">
-          <p>Gunakan skala PK/SK/K/CK/TK untuk alur Pengenalan. Di tahap Assessment (Journey), kamu akan menjawab pilihan ganda benar/salah.</p>
-          <ul className="list-disc ml-5">
-            <li>Isi sesuai kondisimu.</li>
-            <li>Di akhir Confidence tampil hasil total.</li>
-          </ul>
         </div>
-      </GameModal>
+      </div>
     );
   }
 
@@ -273,39 +333,39 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
           <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Hasil Kuesioner 📊</h2>
           
           <div className="space-y-4">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h3 className="font-bold text-lg mb-3">Skor Anda:</h3>
-              <div className="grid grid-cols-2 gap-4">
+            <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
+              <h3 className="font-bold text-lg mb-3 text-gray-800">Skor Anda:</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <p className="font-semibold">Career Concern:</p>
+                  <p className="font-semibold text-gray-700">Career Concern:</p>
                   <p className="text-2xl font-bold text-blue-600">{scores.concern}</p>
                 </div>
                 <div>
-                  <p className="font-semibold">Career Control:</p>
+                  <p className="font-semibold text-gray-700">Career Control:</p>
                   <p className="text-2xl font-bold text-green-600">{scores.control}</p>
                 </div>
                 <div>
-                  <p className="font-semibold">Career Curiosity:</p>
+                  <p className="font-semibold text-gray-700">Career Curiosity:</p>
                   <p className="text-2xl font-bold text-yellow-600">{scores.curiosity}</p>
                 </div>
                 <div>
-                  <p className="font-semibold">Career Confidence:</p>
+                  <p className="font-semibold text-gray-700">Career Confidence:</p>
                   <p className="text-2xl font-bold text-purple-600">{scores.confidence}</p>
                 </div>
               </div>
               <div className="mt-4 pt-4 border-t border-gray-300">
-                <p className="font-semibold text-lg">Total Skor:</p>
-                <p className="text-3xl font-bold text-gray-800">{total} / 120</p>
+                <p className="font-semibold text-lg text-gray-800">Total Skor:</p>
+                <p className="text-3xl font-bold text-gray-900">{total} / 120</p>
               </div>
               <div className="mt-2">
-                <p className="font-semibold">Persentase:</p>
-                <p className="text-2xl font-bold text-indigo-600">{percent.toFixed(1)}%</p>
+                <p className="font-semibold text-gray-800">Persentase:</p>
+                <p className="text-2xl font-bold text-indigo-700">{percent.toFixed(1)}%</p>
               </div>
               <div className="mt-2">
-                <p className="font-semibold">Kategori:</p>
+                <p className="font-semibold text-gray-800">Kategori:</p>
                 <p className={`text-2xl font-bold ${
-                  category === 'Tinggi' ? 'text-green-600' : 
-                  category === 'Normal' ? 'text-yellow-600' : 'text-red-600'
+                  category === 'Tinggi' ? 'text-green-700' : 
+                  category === 'Normal' ? 'text-yellow-700' : 'text-red-700'
                 }`}>{category}</p>
               </div>
             </div>
@@ -354,17 +414,17 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
       }}>
         <div className="bg-white bg-opacity-95 rounded-lg shadow-2xl p-8 max-w-2xl w-full text-center">
           <div className="text-6xl mb-4">🎉</div>
-          <h2 className="text-4xl font-bold text-gray-800 mb-4">Selamat! 🎊</h2>
-          <p className="text-xl text-gray-600 mb-6">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-4">Selamat! 🎊</h2>
+          <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-6">
             Anda telah menyelesaikan kuesioner Career Compass DIARY dengan baik!
           </p>
-          <p className="text-lg text-gray-700 mb-8">
+          <p className="text-sm sm:text-base md:text-lg text-gray-700 mb-8">
             Semoga hasil ini membantu Anda memahami lebih dalam tentang karir dan masa depan Anda. 🌟
           </p>
           
           <button
             onClick={handleHome}
-            className="bg-blue-500 text-white px-8 py-3 rounded-lg hover:bg-blue-600 transition-colors text-lg font-bold"
+            className="bg-blue-500 text-white px-4 py-2 sm:px-8 sm:py-3 rounded-lg hover:bg-blue-600 transition-colors text-sm sm:text-base md:text-lg font-bold"
           >
             Kembali ke Journey
           </button>
@@ -381,13 +441,15 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
     : [];
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{
-      backgroundImage: 'url(/Background_Mulai.png)',
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat'
-    }}>
-      {/* Title Badge */}
+    <>
+      <LoadingOverlay isLoading={submitting} text="Menyimpan hasil kuesioner..." />
+      <div className="min-h-screen flex items-center justify-center p-4" style={{
+        backgroundImage: 'url(/Background_Mulai.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}>
+        {/* Title Badge */}
       <div className="absolute top-4 left-4 z-10">
         <div className="bg-yellow-400 px-6 py-3 rounded-lg shadow-lg">
           <h2 className="text-xl font-bold text-gray-800 capitalize">
@@ -397,7 +459,7 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
       </div>
 
       <div className="max-w-5xl w-full mx-auto pt-24">
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {currentQuestions.map((question, index) => (
             <div key={index} className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-lg shadow-lg p-4 text-white">
               {/* Question Number and Text */}
@@ -464,6 +526,7 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
         )}
       </div>
     </div>
+    </>
   );
 }
 
@@ -491,10 +554,11 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
   const [introStep, setIntroStep] = useState(weightedStage ? 0 : 0);
   const [answers, setAnswers] = useState<number[]>(Array(questions.length).fill(-1));
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [modal, setModal] = useState<null | { type: 'success' | 'fail'; correct: number; detail?: { totalScore: number; maxScore: number; percent: number } }>(null);
+  const [modal, setModal] = useState<null | { type: 'success' | 'fail'; correct: number; detail?: { totalScore: number; maxScore: number; percent: number; category?: 'Very High' | 'High' | 'Low' | 'Very Low' } }>(null);
+  const [submitting, setSubmitting] = useState(false);
   const passThreshold = 4; // minimal benar 4/6 untuk stage lain
-  const weightedMaxScore = weightedStage ? weightedQuestions.length * 40 : 0;
-  const weightedPassThreshold = weightedStage ? Math.round(weightedMaxScore * 0.7) : 0; // minimal 70% dari total
+  const weightedMaxScore = weightedStage ? weightedQuestions.length * 40 : 0; // 6 soal * 40 = 240
+  const weightedPassThreshold = 180; // minimal 180 (75%) untuk lulus
 
   const answeredAll = answers.every(a => a >= 0);
   const totalQuestions = questions.length;
@@ -548,32 +612,73 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
     }
   };
 
+  const handleBackToInstructions = () => {
+    if (!isWeightedStage) return;
+    // Find the index of the instructions slide
+    const instructionsIndex = introSlides.findIndex(slide => slide.key.includes('instructions'));
+    if (instructionsIndex !== -1) {
+      setIntroStep(instructionsIndex);
+    }
+  };
+
   if (isWeightedStage && introStep < introSlides.length) {
     const slide = introSlides[introStep];
     const voiceText = slide.paragraphs.join(' ');
     const isLastSlide = introStep === introSlides.length - 1;
+    const isInstructionsSlide = slide.key.includes('instructions');
 
     return (
-      <GameModal
-        open={true}
-        onClose={() => router.push('/journey')}
-        title={<span>{slide.title}</span>}
-        right={
-          <div className="flex flex-col gap-3">
-            <TextToSpeech text={voiceText} className="bg-white/80 rounded-full p-3 shadow-lg hover:scale-105 transition-transform" />
-            <GameButton onClick={() => router.push('/journey')}>Home</GameButton>
-            <GameButton onClick={() => setIntroStep((prev) => prev + 1)} className="from-green-400 to-green-600">
-              {isLastSlide ? 'Mulai Soal' : 'Next'}
-            </GameButton>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/70" onClick={() => router.push('/journey')} />
+        <div className="relative w-full max-w-4xl">
+          <div className="bg-gradient-to-b from-yellow-200 via-yellow-300 to-yellow-400 rounded-[28px] overflow-hidden border-4 border-white/70 shadow-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-2xl md:text-3xl font-extrabold text-emerald-700 drop-shadow">{slide.title}</h3>
+              <div className="flex items-center gap-3">
+                <div className="[&_svg]:!text-emerald-600 [&_svg:hover]:!text-emerald-700 [&_svg]:!fill-emerald-600">
+                  <TextToSpeech text={voiceText} className="hover:scale-105 transition-transform" />
+                </div>
+                <button
+                  onClick={() => router.push('/journey')}
+                  className="text-emerald-700 hover:text-emerald-900 transition-colors p-1 rounded-full hover:bg-white/20"
+                  aria-label="Tutup"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 custom-scroll">
+              <div className="space-y-3 text-emerald-900 whitespace-pre-line">
+                {slide.paragraphs.map((paragraph, idx) => (
+                  <p key={`${slide.key}-${idx}`}>{paragraph}</p>
+                ))}
+              </div>
+              
+              {/* Buttons di bawah - kanan kiri */}
+              <div className="flex justify-between gap-3 pt-4 border-t-2 border-emerald-200">
+                <GameButton onClick={() => router.push('/journey')}>Home</GameButton>
+                <GameButton 
+                  onClick={() => {
+                    if (isLastSlide || isInstructionsSlide) {
+                      // Set ke soal 1 dan skip intro slides
+                      setCurrentQuestion(0);
+                      setIntroStep(introSlides.length);
+                    } else {
+                      setIntroStep((prev) => prev + 1);
+                    }
+                  }} 
+                  className="from-green-400 to-green-600"
+                >
+                  {isLastSlide || isInstructionsSlide ? 'Mulai Soal' : 'Next'}
+                </GameButton>
+              </div>
+            </div>
           </div>
-        }
-      >
-        <div className="space-y-4 text-emerald-900 font-semibold whitespace-pre-line">
-          {slide.paragraphs.map((paragraph, idx) => (
-            <p key={`${slide.key}-${idx}`}>{paragraph}</p>
-          ))}
         </div>
-      </GameModal>
+      </div>
     );
   }
 
@@ -596,12 +701,24 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
       ? weightedScore
       : answers.reduce((sum, a, idx) => sum + (a === mcqQuestions[idx].correct ? 1 : 0), 0);
 
-    const passed = isWeightedStage ? weightedScore >= weightedPassThreshold : correctCount >= passThreshold;
+    // Determine category and passed status based on new scoring system
+    let category: 'Very High' | 'High' | 'Low' | 'Very Low' | null = null;
+    let passed = false;
+    
+    if (isWeightedStage) {
+      category = scoreToCategory(weightedScore, weightedMaxScore);
+      const categoryInfo = getCategoryInfo(category);
+      passed = categoryInfo.passed; // Very High atau High = passed
+    } else {
+      passed = correctCount >= passThreshold;
+    }
+    
     const percentScore = isWeightedStage
       ? (weightedMaxScore > 0 ? Math.round((weightedScore / weightedMaxScore) * 100) : 0)
       : Math.round((correctCount / mcqQuestions.length) * 100);
 
     // Save attempt and progress
+    setSubmitting(true);
     try {
       await fetch('/api/stage', {
         method: 'POST',
@@ -610,7 +727,7 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
           userId: user.uid,
           stage,
           answers,
-          score: percentScore,
+          score: isWeightedStage ? weightedScore : percentScore, // Send total score (0-240) for weighted stages, percent for others
           passed,
         }),
       });
@@ -626,12 +743,14 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
       });
     } catch (e) {
       console.error(e);
+    } finally {
+      setSubmitting(false);
     }
 
     const modalPayload: {
       type: 'success' | 'fail';
       correct: number;
-      detail?: { totalScore: number; maxScore: number; percent: number };
+      detail?: { totalScore: number; maxScore: number; percent: number; category?: 'Very High' | 'High' | 'Low' | 'Very Low' };
     } = isWeightedStage
       ? {
           type: passed ? 'success' : 'fail',
@@ -640,6 +759,7 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
             totalScore: weightedScore,
             maxScore: weightedMaxScore,
             percent: percentScore,
+            category: category || undefined,
           },
         }
       : {
@@ -648,16 +768,26 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
         };
 
     setModal(modalPayload);
+
+    // Jika lolos dan weighted stage, otomatis redirect ke diary setelah 3 detik
+    if (passed && isWeightedStage && weightedStage) {
+      setTimeout(() => {
+        setModal(null);
+        router.push(`/${weightedStage}/diary?fromAssessment=true`);
+      }, 3000); // Tampilkan modal 3 detik, lalu otomatis redirect
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{
-      backgroundImage: 'url(/Background_Mulai.png)',
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat'
-    }}>
-      <div className="max-w-5xl w-full mx-auto">
+    <>
+      <LoadingOverlay isLoading={submitting} text="Menyimpan hasil assessment..." />
+      <div className="min-h-screen flex items-center justify-center p-4" style={{
+        backgroundImage: 'url(/Background_Mulai.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}>
+        <div className="max-w-5xl w-full mx-auto">
         <div className="absolute top-4 left-4 z-10">
           <div className="bg-yellow-400 px-6 py-3 rounded-lg shadow-lg">
             <h2 className="text-xl font-bold text-gray-800 capitalize">Assessment {stage}</h2>
@@ -678,30 +808,28 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
                   Pilih jawaban yang paling menggambarkan {weightedStage ? weightedPromptMap[weightedStage] : 'persepsimu'}.
                 </p>
               </div>
-              <div className="text-right text-white/80 text-sm font-semibold">
-                <p>Bobot jawaban: 10% – 40%</p>
-                <p>Minimal kelulusan: 70%</p>
-              </div>
             </div>
 
             <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-lg shadow-lg p-6 text-white">
               <p className="text-base font-bold mb-4">
                 {currentQuestion + 1}. {weightedItems[currentQuestion]?.q}
               </p>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {weightedItems[currentQuestion]?.options.map((opt, optIdx) => (
                   <button
                     key={optIdx}
                     onClick={() => handleChoose(currentQuestion, optIdx)}
-                    className={`w-full text-left px-3 py-2 rounded bg-white/15 hover:bg-white/25 transition-colors text-sm ${
-                      answers[currentQuestion] === optIdx ? 'ring-2 ring-white' : ''
+                    className={`text-left px-3 py-2 rounded transition-all text-sm relative ${
+                      answers[currentQuestion] === optIdx 
+                        ? 'bg-emerald-500 text-white ring-4 ring-emerald-300 shadow-lg transform scale-105' 
+                        : 'bg-white/15 hover:bg-white/25 text-white'
                     }`}
                   >
-                    <span className="block font-semibold">
+                    {answers[currentQuestion] === optIdx && (
+                      <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-white font-bold">✓</span>
+                    )}
+                    <span className={`block font-semibold ${answers[currentQuestion] === optIdx ? 'ml-6' : ''}`}>
                       {String.fromCharCode(65 + optIdx)}. {opt.text}
-                    </span>
-                    <span className="text-[11px] uppercase tracking-wide text-yellow-200 font-bold">
-                      Bobot: {opt.score}%
                     </span>
                   </button>
                 ))}
@@ -709,8 +837,8 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
             </div>
 
             <div className="flex justify-between">
-              <GameButton onClick={() => router.push('/journey')} className="from-gray-400 to-gray-600">
-                Home
+              <GameButton onClick={handleBackToInstructions} className="from-gray-400 to-gray-600">
+                Kembali ke Instruksi
               </GameButton>
               <div className="flex gap-3">
                 {currentQuestion > 0 && (
@@ -735,20 +863,27 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-3 gap-3 pt-24">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-12 sm:pt-24">
               {questions.map((item, qIdx) => (
                 <div key={qIdx} className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-lg shadow-lg p-4 text-white">
                   <p className="text-xs font-semibold mb-3">{qIdx + 1}. {item.q}</p>
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {(item as MCQ).options.map((opt, optIdx) => (
                       <button
                         key={optIdx}
                         onClick={() => handleChoose(qIdx, optIdx)}
-                        className={`w-full text-left px-3 py-2 rounded bg-white/15 hover:bg-white/25 transition-colors text-xs ${
-                          answers[qIdx] === optIdx ? 'ring-2 ring-white' : ''
+                        className={`text-left px-3 py-2 rounded transition-all text-xs relative ${
+                          answers[qIdx] === optIdx 
+                            ? 'bg-emerald-500 text-white ring-4 ring-emerald-300 shadow-lg transform scale-105' 
+                            : 'bg-white/15 hover:bg-white/25 text-white'
                         }`}
                       >
-                        {String.fromCharCode(65 + optIdx)}. {opt}
+                        {answers[qIdx] === optIdx && (
+                          <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-white font-bold">✓</span>
+                        )}
+                        <span className={`block ${answers[qIdx] === optIdx ? 'ml-6' : ''}`}>
+                          {String.fromCharCode(65 + optIdx)}. {opt}
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -771,15 +906,26 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
             right={
               modal.type === 'success' ? (
                 <div className="flex flex-col gap-3">
-                  {weightedStage &&
-                    weightedSuccessActions[weightedStage].map((item) => (
-                      <GameButton key={item.href} onClick={() => router.push(item.href)} className={item.className}>
-                        {item.label}
+                  {weightedStage ? (
+                    <div className="text-center">
+                      <p className="text-sm font-semibold text-gray-700 mb-2">
+                        Mengarahkan ke Catatan Harian...
+                      </p>
+                      <GameButton 
+                        onClick={() => {
+                          setModal(null);
+                          router.push(`/${weightedStage}/diary?fromAssessment=true`);
+                        }} 
+                        className="from-yellow-300 to-orange-400"
+                      >
+                        Lanjut Sekarang
                       </GameButton>
-                    ))}
-                  <GameButton onClick={() => router.push('/journey?refresh=true')} className="from-gray-400 to-gray-600">
-                    Kembali ke Journey
-                  </GameButton>
+                    </div>
+                  ) : (
+                    <GameButton onClick={() => router.push('/journey?refresh=true')} className="from-gray-400 to-gray-600">
+                      Kembali ke Journey
+                    </GameButton>
+                  )}
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
@@ -801,25 +947,36 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
             }
           >
             {isWeightedStage ? (
-              <div className="space-y-2 text-emerald-900 font-bold">
-                <p>Skor total: {modal.detail?.totalScore} / {modal.detail?.maxScore}</p>
-                <p>Persentase: {modal.detail?.percent}%</p>
-                <p>Target kelulusan: 70%</p>
-                {modal.type === 'fail' && (
-                  <p className="font-semibold">
-                    Pilih jawaban yang paling menggambarkan {weightedStage ? weightedPromptMap[weightedStage] : 'dirimu'} untuk mencapai target nilai.
-                  </p>
-                )}
+              <div className="space-y-3 text-gray-800">
+                <p className="font-bold text-lg">Skor total: <span className="text-blue-700">{modal.detail?.totalScore}</span> / <span className="text-gray-600">{modal.detail?.maxScore}</span></p>
+                <p className="font-bold text-lg">Persentase: <span className={modal.type === 'success' ? 'text-green-700' : 'text-red-700'}>{modal.detail?.percent}%</span></p>
+                {modal.detail?.category && (() => {
+                  const categoryInfo = getCategoryInfo(modal.detail.category);
+                  return (
+                    <>
+                      <div className={`p-3 rounded-lg border-2 ${categoryInfo.color}`}>
+                        <p className="font-bold text-lg">Kategori: {categoryInfo.label}</p>
+                        <p className="font-semibold mt-1">Tindakan: {categoryInfo.action}</p>
+                      </div>
+                      {!categoryInfo.passed && (
+                        <p className="font-semibold text-gray-800 mt-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                          Pilih jawaban yang paling menggambarkan {weightedStage ? weightedPromptMap[weightedStage] : 'dirimu'} untuk meningkatkan nilai.
+                        </p>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             ) : (
               <>
-                <p className="text-emerald-900 font-bold">Jawaban benar: {modal.correct} / {questions.length}</p>
-                {modal.type === 'fail' && <p className="text-emerald-900 mt-2 font-semibold">Coba ulang atau kembali ke Start untuk belajar lagi.</p>}
+                <p className="text-gray-800 font-bold text-lg">Jawaban benar: <span className={modal.type === 'success' ? 'text-green-700' : 'text-red-700'}>{modal.correct}</span> / <span className="text-gray-600">{questions.length}</span></p>
+                {modal.type === 'fail' && <p className="text-gray-700 mt-2 font-semibold">Coba ulang atau kembali ke Start untuk belajar lagi.</p>}
               </>
             )}
           </GameModal>
         )}
       </div>
     </div>
+    </>
   );
 }

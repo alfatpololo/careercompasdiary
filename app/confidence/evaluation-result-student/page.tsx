@@ -68,7 +68,7 @@ export default function ConfidenceEvaluationResultStudent() {
       }
 
       alert('Evaluasi hasil siswa tahap Confidence berhasil disimpan! ✅');
-      router.push('/confidence');
+      router.push('/journey');
     } catch (error) {
       console.error('[Confidence Evaluation Student Result] Error:', error);
       alert('Terjadi kesalahan saat menyimpan evaluasi.');
@@ -80,7 +80,7 @@ export default function ConfidenceEvaluationResultStudent() {
   if (!user) {
     return (
       <div
-        className="min-h-screen flex items_center justify-center"
+        className="min-h-screen flex items-center justify-center"
         style={{
           backgroundImage: 'url(/Background_Mulai.png)',
           backgroundSize: 'cover',
@@ -109,7 +109,7 @@ export default function ConfidenceEvaluationResultStudent() {
         backgroundPosition: 'center',
       }}
     >
-      <div className="max-w-6xl mx_auto space-y-6">
+      <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex items-center justify-between text-white">
           <div>
             <GameBadge className="bg-orange-500/80 border-white">Siswa</GameBadge>

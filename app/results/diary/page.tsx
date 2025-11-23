@@ -151,9 +151,14 @@ export default function DiaryResults() {
               tahap tertentu. Gunakan catatan ini sebagai bahan diskusi bersama guru BK maupun orang tua.
             </p>
           </div>
-          <GameButton onClick={() => router.push('/results')} className="from-gray-400 to-gray-600">
-            Menu Hasil
-          </GameButton>
+          <div className="flex gap-2">
+            <GameButton onClick={() => router.push('/')} className="from-blue-500 to-blue-600">
+              ← Home
+            </GameButton>
+            <GameButton onClick={() => router.push('/results')} className="from-gray-400 to-gray-600">
+              Menu Hasil
+            </GameButton>
+          </div>
         </div>
 
         {loading ? (
@@ -178,12 +183,12 @@ export default function DiaryResults() {
             return (
               <GameCard
                 key={stageId}
-                className="bg-gradient-to-br from-white/90 to-white/60 text-gray-800 border-4 border-white/70 space-y-4"
+                className="bg-gradient-to-br from-white/90 to-white/60 !text-gray-800 border-4 border-white/70 space-y-4"
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <GameBadge className={`${stageMeta.color} border-white text-white`}>
+                  <h2 className="text-2xl font-extrabold drop-shadow-sm !text-gray-800">
                     {stageMeta.title}
-                  </GameBadge>
+                  </h2>
                   <GameButton
                     onClick={() => {
                       if (stageId === 'start') router.push('/adaptabilitas/diary');
@@ -203,17 +208,17 @@ export default function DiaryResults() {
                       className="bg-white/75 rounded-2xl border-2 border-white/60 p-4 space-y-2"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <h3 className="text-lg font-bold text-gray-800">
+                        <h3 className="text-lg font-bold !text-gray-900">
                           {entry.judul || 'Catatan Tanpa Judul'}
                         </h3>
-                        <span className="text-xs font-semibold text-gray-500">
+                        <span className="text-xs font-semibold !text-gray-600">
                           {formatDate(entry.createdAt || entry.tanggal)}
                         </span>
                       </div>
-                      <p className="text-xs font-semibold text-gray-500">
+                      <p className="text-xs font-semibold !text-gray-600">
                         Penulis: {entry.nama || user.displayName || user.email}
                       </p>
-                      <div className="whitespace-pre-line text-sm text-gray-700 leading-relaxed">
+                      <div className="whitespace-pre-line text-sm !text-gray-800 leading-relaxed">
                         {entry.isi || 'Belum ada isi catatan.'}
                       </div>
                     </div>
@@ -225,12 +230,17 @@ export default function DiaryResults() {
         )}
 
         <div className="flex justify-between">
-          <GameButton onClick={() => router.push('/results')} className="from-gray-400 to-gray-600">
-            Kembali ke Hasil
-          </GameButton>
-          <GameButton onClick={() => router.push('/journey')} className="from-blue-500 to-indigo-600">
-            Lihat Journey Map
-          </GameButton>
+          <div className="flex gap-2">
+            <GameButton onClick={() => router.push('/')} className="from-blue-500 to-blue-600">
+              ← Home
+            </GameButton>
+            <GameButton onClick={() => router.push('/results')} className="from-gray-400 to-gray-600">
+              Kembali ke Hasil
+            </GameButton>
+            <GameButton onClick={() => router.push('/journey')} className="from-blue-500 to-indigo-600">
+              Lihat Journey Map
+            </GameButton>
+          </div>
         </div>
       </div>
     </div>

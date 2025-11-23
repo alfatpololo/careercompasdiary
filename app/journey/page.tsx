@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
-import { GameBadge } from '../../components/GameUI';
+import { GameBadge, LoadingSpinner } from '../../components/GameUI';
 
 export default function JourneyMap() {
   const router = useRouter();
@@ -12,14 +12,29 @@ export default function JourneyMap() {
   const [startDone, setStartDone] = useState<boolean>(false);
   const [stageDone, setStageDone] = useState<Record<string, boolean>>({});
   const [stageStats, setStageStats] = useState<Record<string, { lolos: number; gagal: number }>>({});
+  const [loading, setLoading] = useState<boolean>(true);
+  const [isGuru, setIsGuru] = useState<boolean | null>(null);
 
   const fetchStatus = useCallback(async () => {
     if (!user) {
       console.log('[Journey] No user, skipping fetch');
+      setLoading(false);
       return;
     }
     try {
+      setLoading(true);
       console.log('[Journey] Fetching status for user:', user.uid);
+      
+      // Check if user is guru
+      try {
+        const userRes = await fetch(`/api/users?userId=${encodeURIComponent(user.uid)}`);
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          setIsGuru(userData.data?.role === 'guru');
+        }
+      } catch (error) {
+        console.error('[Journey] Error checking user role:', error);
+      }
       
       const res = await fetch(`/api/stage?userId=${encodeURIComponent(user.uid)}`);
       let latestPassData: Record<string, { score: number; passed: boolean; createdAt: string }> = {};
@@ -122,6 +137,8 @@ export default function JourneyMap() {
       }
     } catch (e) {
       console.error('[Journey] Failed to load stage status', e);
+    } finally {
+      setLoading(false);
     }
   }, [user]);
 
@@ -281,7 +298,74 @@ export default function JourneyMap() {
       return;
     }
     
-    // Gate by unlock status - EXPLICIT check
+    // If user is guru, redirect to evaluation page
+    if (isGuru === true) {
+      console.log('[Journey] ✅ Guru detected, redirecting to evaluation');
+      router.push(`/guru/evaluation/${stageId}`);
+      return;
+    }
+    
+    // START - jika sudah selesai, langsung ke hasil pretest
+    if (stageId === 'start') {
+      if (startDone) {
+        console.log('[Journey] ✅ START already completed, showing pretest results');
+        router.push('/results/prepost?view=pretest');
+        return;
+      }
+      console.log('[Journey] ✅ Navigating to START');
+      router.push('/adaptabilitas');
+      return;
+    }
+    
+    // Adaptabilitas - cek apakah semua stage sudah selesai untuk posttest
+    if (stageId === 'adaptabilitas') {
+      // Check if all stages are completed (concern, control, curiosity, confidence all passed)
+      const allStagesCompleted = ['concern', 'control', 'curiosity', 'confidence'].every(
+        stage => latestPass[stage]?.passed === true
+      );
+      
+      if (allStagesCompleted) {
+        // Cek apakah sudah ada posttest dengan mengecek quiz_results
+        const checkPosttest = async () => {
+          if (!user?.uid) return;
+          try {
+            const quizRes = await fetch(`/api/quiz?userId=${encodeURIComponent(user.uid)}`);
+            if (quizRes.ok) {
+              const quizData = await quizRes.json();
+              const results = quizData.results || [];
+              
+              // Cari posttest (isPosttest === true)
+              const hasPosttest = results.some((result: { isPosttest?: boolean }) => result.isPosttest === true);
+              
+              if (hasPosttest) {
+                console.log('[Journey] ✅ Posttest already completed, showing posttest results');
+                router.push('/results/prepost?view=posttest');
+              } else {
+                console.log('[Journey] ✅ All stages completed, redirecting to posttest');
+                router.push('/adaptabilitas-posttest');
+              }
+            } else {
+              // Jika error, tetap redirect ke posttest
+              console.log('[Journey] ✅ All stages completed, redirecting to posttest');
+              router.push('/adaptabilitas-posttest');
+            }
+          } catch (error) {
+            console.error('[Journey] Error checking posttest:', error);
+            // Jika error, tetap redirect ke posttest
+            router.push('/adaptabilitas-posttest');
+          }
+        };
+        
+        checkPosttest();
+        return;
+      } else {
+        // Jika belum semua stage selesai, tidak bisa akses adaptabilitas
+        alert('Selesaikan semua stage terlebih dahulu (Concern, Control, Curiosity, Confidence) untuk mengakses Posttest Adaptabilitas Karier');
+        return;
+      }
+    }
+    
+    // Gate by unlock status - EXPLICIT check untuk stage lain
     const isUnlocked = unlocked[stageId] === true;
     if (!isUnlocked) {
       console.log('[Journey] ❌ Stage LOCKED:', stageId);
@@ -292,11 +376,39 @@ export default function JourneyMap() {
       return;
     }
 
+    // Check if stage is already completed - if yes, show results instead
+    const stagePassed = latestPass[stageId]?.passed === true;
+    
+    if (stagePassed) {
+      console.log('[Journey] ✅ Stage already completed, showing results:', stageId);
+      // Individual stage results → Show specific stage result
+      if (['concern', 'control', 'curiosity', 'confidence'].includes(stageId)) {
+        router.push(`/results/adaptability?stage=${stageId}`);
+      } else {
+        router.push('/results/adaptability');
+      }
+      return;
+    }
+
     console.log('[Journey] ✅ Navigating to stage:', stageId, 'isUnlocked:', isUnlocked);
-    if (stageId === 'start') router.push('/adaptabilitas');
-    else if (stageId === 'adaptabilitas') router.push('/adaptabilitas');
-    else router.push(`/quiz/${stageId}?mode=assessment`);
+    router.push(`/quiz/${stageId}?mode=assessment`);
   };
+
+  if (loading) {
+    return (
+      <div 
+        className="min-h-screen w-full relative flex items-center justify-center"
+        style={{
+          backgroundImage: 'url(/Background_Mulai.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        <LoadingSpinner size="lg" text="Memuat Journey Map..." fullScreen={false} />
+      </div>
+    );
+  }
 
   return (
     <div 
@@ -312,22 +424,25 @@ export default function JourneyMap() {
       {/* Interactive Stage Buttons */}
       {stages.map((stage) => {
         // EXPLICIT check: pastikan unlocked[stage.id] selalu boolean, bukan undefined
-        const isStageUnlocked = unlocked[stage.id] === true;
+        // START selalu bisa diklik meskipun sudah selesai
+        // Guru bisa akses semua stage untuk evaluasi
+        const isStageUnlocked = stage.id === 'start' ? true : (unlocked[stage.id] === true);
+        const canClick = isGuru === true || stage.id === 'start' || isStageUnlocked;
         
         return (
         <div
           key={stage.id}
-          className={`absolute z-20 group ${isStageUnlocked ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
+          className={`absolute z-20 group ${canClick ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
           style={{
             top: stage.position.top,
             left: stage.position.left,
             transform: 'translate(-50%, -50%)'
           }}
-          onClick={() => handleStageClick(stage.id)}
+          onClick={() => canClick && handleStageClick(stage.id)}
         >
           {/* Stage Button styled like game badge */}
           <div className={`
-            relative transition-all duration-200 transform ${isStageUnlocked ? 'hover:scale-110' : ''}
+            relative transition-all duration-200 transform ${canClick ? 'hover:scale-110' : ''}
             rounded-2xl border-4 border-white/70 shadow-[0_6px_0_rgba(0,0,0,0.25)] px-4 py-2
             ${stage.id === 'start' ? 'bg-gradient-to-b from-yellow-300 to-yellow-500' : ''}
             ${stage.id === 'concern' ? (isStageUnlocked ? 'bg-gradient-to-b from-sky-400 to-blue-600' : 'bg-gray-400') : ''}
@@ -358,7 +473,7 @@ export default function JourneyMap() {
             )}
             
             {/* Lock Indicator for locked stages */}
-            {!isStageUnlocked && stage.id !== 'start' && (
+            {!canClick && stage.id !== 'start' && (
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-gray-800 bg-opacity-90 rounded-full flex items-center justify-center z-10 border-2 border-white">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -370,7 +485,7 @@ export default function JourneyMap() {
           
           {/* Hover Tooltip */}
           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-            <GameBadge className="bg-black/70 border-white text-white">Klik untuk {isStageUnlocked ? 'memulai' : 'membuka'} {stage.name}</GameBadge>
+            <GameBadge className="bg-black/70 border-white text-white">Klik untuk {canClick ? (stage.id === 'start' && startDone ? 'mengulang' : 'memulai') : 'membuka'} {stage.name}</GameBadge>
           </div>
         </div>
         );

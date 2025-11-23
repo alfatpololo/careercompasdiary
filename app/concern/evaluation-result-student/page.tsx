@@ -68,7 +68,7 @@ export default function ConcernEvaluationResultStudent() {
       }
 
       alert('Evaluasi hasil siswa berhasil disimpan! ✅');
-      router.push('/concern');
+      router.push('/journey');
     } catch (error) {
       console.error('[Concern Evaluation Student Result] Error:', error);
       alert('Terjadi kesalahan saat menyimpan evaluasi.');

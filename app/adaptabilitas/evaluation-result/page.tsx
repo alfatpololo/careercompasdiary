@@ -1,22 +1,24 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
-import { GameCard, GameButton } from '../../../components/GameUI';
+import { GameCard, GameButton, LoadingSpinner } from '../../../components/GameUI';
 
 const questions = [
-  'Saya mengisi instrumen CAAS I secara lengkap dan jujur.',
-  'Saya berhasil membuat akun Website Career Compass Diary, melengkapi profil, dan membuka misi yang tersedia.',
-  'Saya memahami materi kepedulian karier (Concern).',
-  'Saya menyadari materi kepedulian akan karier (Concern) sangat penting bagi saya.',
-  'Saya telah menyelesaikan misi gamifikasi tahap Concern sesuai petunjuk.'
+  'Saya mampu menggunakan website Career Compass Diary',
+  'Saya dapat memahami bagaimana fitur-fitur Career Compass Diary mendukung proses bimbingan karier',
+  'Saya menunjukkan pemahaman dalam penggunaan website',
+  'Saya memahami pentingnya menumbuhkan adaptabilitas karier',
+  'Saya menunjukkan antusias dan positif dalam mengembangkan keterampilan adaptabilitas karier saya'
 ];
 
-export default function EvaluationResult() {
+function EvaluationResultContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const [answers, setAnswers] = useState<number[]>([]);
+  const isPosttest = searchParams?.get('posttest') === 'true';
 
   const handleAnswer = (index: number, value: number) => {
     const newAnswers = [...answers];
@@ -55,7 +57,14 @@ export default function EvaluationResult() {
         return;
       }
 
-      // Tandai START selesai pada progress user agar Concern terbuka di Journey
+      // Jika ini posttest, langsung redirect ke hasil posttest
+      if (isPosttest) {
+        console.log('[Evaluation Result] Posttest evaluation completed, redirecting to posttest results');
+        router.push('/results/prepost?view=posttest');
+        return;
+      }
+
+      // Tandai START selesai pada progress user agar Concern terbuka di Journey (hanya untuk pretest)
       console.log('[Evaluation Result] Saving START progress...');
       try {
         // START tidak butuh skor, hanya completion
@@ -203,14 +212,36 @@ export default function EvaluationResult() {
                 </tbody>
               </table>
 
-              <div className="flex justify-between mt-6">
-                <GameButton onClick={() => router.back()} className="from-gray-400 to-gray-600">Cancel</GameButton>
-                <GameButton onClick={handleSubmit} className="from-green-400 to-green-600">Submit</GameButton>
-              </div>
             </div>
+          </div>
+          
+          {/* Buttons - outside grid, consistent position */}
+          <div className="flex justify-between mt-6 pt-4 border-t-2 border-white/30">
+            <GameButton onClick={() => router.back()} className="from-gray-400 to-gray-600">Cancel</GameButton>
+            <GameButton onClick={handleSubmit} className="from-green-400 to-green-600">Submit</GameButton>
           </div>
         </GameCard>
       </div>
     </div>
   );
 }
+
+export default function EvaluationResult() {
+  return (
+    <Suspense fallback={
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          backgroundImage: 'url(/Background_Mulai.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <LoadingSpinner size="lg" text="Memuat..." fullScreen={false} />
+      </div>
+    }>
+      <EvaluationResultContent />
+    </Suspense>
+  );
+}
+

@@ -1,10 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { GameCard, GameButton, GameBadge } from '../../components/GameUI';
+import { GameCard, GameButton, GameBadge, LoadingSpinner } from '../../components/GameUI';
 
-const developerProfiles = [
+type DeveloperProfile = {
+  name: string;
+  university: string;
+  email: string;
+  address: string;
+  major: string;
+  position: string;
+  whatsapp: string;
+};
+
+const defaultDeveloperProfiles: DeveloperProfile[] = [
   {
     name: 'Drs. Ahmad Syahputra, M.Pd',
     university: 'Universitas Negeri Bandung',
@@ -34,11 +44,40 @@ const developerProfiles = [
   },
 ];
 
-const stepTitles = ['Mengapa Career Compass Diary?', 'Tim Pengembang', 'Arahkan Perjalananmu'];
+const stepTitles = ['Tentang Career Compass Diary', 'Tim Pengembang'];
 
 export default function TentangPage() {
   const [step, setStep] = useState(0);
+  const [developerProfiles, setDeveloperProfiles] = useState<DeveloperProfile[]>(defaultDeveloperProfiles);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    const loadDevelopers = async () => {
+      try {
+        const res = await fetch('/api/cms/developers');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.data && data.data.length > 0) {
+            setDeveloperProfiles(data.data);
+          } else {
+            // Use default if no data found
+            setDeveloperProfiles(defaultDeveloperProfiles);
+          }
+        } else {
+          // Fallback to default
+          setDeveloperProfiles(defaultDeveloperProfiles);
+        }
+      } catch (error) {
+        console.error('Error loading developers:', error);
+        setDeveloperProfiles(defaultDeveloperProfiles);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDevelopers();
+  }, []);
 
   const nextStep = () => setStep((prev) => Math.min(prev + 1, stepTitles.length - 1));
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 0));
@@ -99,47 +138,33 @@ export default function TentangPage() {
           {step === 1 && (
             <div className="space-y-4">
               <p className="text-white/90">
-                Pengembangan platform ini melibatkan kolaborasi guru BK dan pengembang media edukasi. Berikut tiga profil
-                dummy yang merepresentasikan tim di balik Career Compass Diary:
+                Pengembangan platform ini melibatkan kolaborasi guru BK dan pengembang media edukasi. Berikut tim di balik Career Compass Diary:
               </p>
-              <div className="grid md:grid-cols-3 gap-4">
-                {developerProfiles.map((dev) => (
-                  <div key={dev.email} className="bg-white/15 border-2 border-white/30 rounded-2xl p-4 text-white/90 space-y-2">
-                    <h3 className="text-xl font-bold drop-shadow">{dev.name}</h3>
-                    <p className="text-sm">{dev.position}</p>
-                    <div className="text-xs space-y-1">
-                      <p><span className="font-semibold">Universitas:</span> {dev.university}</p>
-                      <p><span className="font-semibold">Jurusan:</span> {dev.major}</p>
-                      <p><span className="font-semibold">Email:</span> {dev.email}</p>
-                      <p><span className="font-semibold">Alamat:</span> {dev.address}</p>
-                      <p><span className="font-semibold">WA:</span> {dev.whatsapp}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-4 text-white/95">
-              <p>
-                Siap melihat perjalanan belajar dan adaptabilitasmu? Career Compass Diary menyediakan rangkaian laporan
-                untuk memantau progress, evaluasi, hingga refleksi harian.
-              </p>
-              <ul className="list-disc ml-6 space-y-2 text-sm">
-                <li><span className="font-semibold">Hasil Dimensi Adaptabilitas Karier:</span> lihat pencapaian Concern hingga Confidence, lengkap dengan perolehan tiap soal.</li>
-                <li><span className="font-semibold">Evaluasi Proses & Hasil:</span> ikuti catatan refleksi siswa dan guru dari setiap tahap.</li>
-                <li><span className="font-semibold">Pretest & Posttest:</span> bandingkan pemahaman sebelum dan sesudah program.</li>
-                <li><span className="font-semibold">Catatan Harian:</span> telusuri refleksi pribadi yang memandu arah kariermu.</li>
-              </ul>
-              <div className="flex flex-wrap gap-3">
-                <GameButton onClick={() => router.push('/results')} className="from-yellow-300 to-orange-400">
-                  Buka Halaman Hasil
-                </GameButton>
-                <GameButton onClick={() => router.push('/journey')} className="from-emerald-400 to-emerald-600">
-                  Lanjut ke Journey
-                </GameButton>
-              </div>
+              {loading ? (
+                <div className="flex justify-center py-8">
+                  <LoadingSpinner size="md" text="Memuat tim pengembang..." fullScreen={false} />
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-3 gap-4">
+                  {developerProfiles.length > 0 ? (
+                    developerProfiles.map((dev, index) => (
+                      <div key={dev.email || index} className="bg-white/15 border-2 border-white/30 rounded-2xl p-4 text-white/90 space-y-2">
+                        <h3 className="text-xl font-bold drop-shadow">{dev.name || 'Nama tidak tersedia'}</h3>
+                        <p className="text-sm">{dev.position || 'Posisi tidak tersedia'}</p>
+                        <div className="text-xs space-y-1">
+                          {dev.university && <p><span className="font-semibold">Universitas:</span> {dev.university}</p>}
+                          {dev.major && <p><span className="font-semibold">Jurusan:</span> {dev.major}</p>}
+                          {dev.email && <p><span className="font-semibold">Email:</span> {dev.email}</p>}
+                          {dev.address && <p><span className="font-semibold">Alamat:</span> {dev.address}</p>}
+                          {dev.whatsapp && <p><span className="font-semibold">WA:</span> {dev.whatsapp}</p>}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-white/80 col-span-3 text-center">Belum ada data tim pengembang.</p>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -147,9 +172,11 @@ export default function TentangPage() {
             <GameButton onClick={prevStep} className="from-gray-400 to-gray-600" disabled={step === 0}>
               Sebelumnya
             </GameButton>
-            <GameButton onClick={step === stepTitles.length - 1 ? () => router.push('/results') : nextStep} className="from-yellow-300 to-orange-400">
-              {step === stepTitles.length - 1 ? 'Lihat Hasil' : 'Berikutnya'}
-            </GameButton>
+            {step < stepTitles.length - 1 && (
+              <GameButton onClick={nextStep} className="from-yellow-300 to-orange-400">
+                Berikutnya
+              </GameButton>
+            )}
           </div>
         </GameCard>
       </div>

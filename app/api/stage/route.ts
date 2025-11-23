@@ -35,21 +35,23 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
-    if (!userId) {
-      return NextResponse.json({ message: 'userId diperlukan' }, { status: 400 });
-    }
-
     if (!adminDb) {
       return NextResponse.json({ message: 'Database tidak tersedia' }, { status: 503 });
     }
 
-    // Fetch all attempts for user (without orderBy to avoid index requirement)
-    const querySnap = await adminDb
-      .collection('stage_attempts')
-      .where('userId', '==', userId)
-      .get();
+    // If userId provided, get attempts for that user
+    // Otherwise, get all attempts
+    let querySnap;
+    if (userId) {
+      querySnap = await adminDb
+        .collection('stage_attempts')
+        .where('userId', '==', userId)
+        .get();
+    } else {
+      querySnap = await adminDb.collection('stage_attempts').get();
+    }
 
-    type AttemptData = { stage: string; score: number; passed: boolean; createdAt: string; answers?: unknown[] };
+    type AttemptData = { userId?: string; stage: string; score: number; passed: boolean; createdAt: string; answers?: unknown[] };
     const attempts = querySnap.docs.map(d => ({ id: d.id, ...(d.data() as AttemptData) }))
       .sort((a, b) => {
         // Sort by createdAt descending (latest first)

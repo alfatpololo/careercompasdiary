@@ -1,47 +1,46 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { QuizComponent } from '../quiz/[stage]/quiz';
+import { LoadingSpinner } from '../../components/GameUI';
 
 export default function AdaptabilitasCareer() {
   const router = useRouter();
   const { user } = useAuth();
+  const [checking, setChecking] = useState(true);
+  const [hasCompletedQuiz, setHasCompletedQuiz] = useState(false);
 
-  // Check if START already completed - skip quiz jika sudah pernah isi
+  // Cek apakah user sudah pernah mengisi quiz pembuka
   useEffect(() => {
-    if (!user) {
-      return;
-    }
+    if (!user) return;
 
-    const checkStartProgress = async () => {
+    const checkQuizCompletion = async () => {
       try {
-        const prog = await fetch(`/api/progress?userId=${encodeURIComponent(user.uid)}`);
-        if (prog.ok) {
-          const pdata = await prog.json();
-          const progArr: Array<{ levelId: string; completed: boolean }> = pdata?.data?.progress || [];
-          const startItem = progArr.find((p) => p.levelId === 'start' && p.completed === true);
-          const isStartDone = !!startItem;
+        const response = await fetch(`/api/quiz?userId=${encodeURIComponent(user.uid)}`);
+        if (response.ok) {
+          const data = await response.json();
+          const results = data.results || [];
           
-          console.log('[START] Progress check:', {
-            found: !!startItem,
-            isStartDone
-          });
-          
-          // Jika START sudah selesai, redirect ke journey
-          if (isStartDone) {
-            console.log('[START] Already completed, redirecting to journey');
-            router.push('/journey?refresh=true');
+          // Jika ada hasil quiz, berarti sudah pernah mengisi
+          if (results.length > 0) {
+            console.log('[Adaptabilitas] User sudah pernah mengisi quiz pembuka, redirect ke intro');
+            setHasCompletedQuiz(true);
+            router.push('/adaptabilitas-intro');
             return;
           }
         }
-      } catch (e) {
-        console.error('[START] Failed to check progress:', e);
+        setHasCompletedQuiz(false);
+      } catch (error) {
+        console.error('[Adaptabilitas] Error checking quiz completion:', error);
+        setHasCompletedQuiz(false);
+      } finally {
+        setChecking(false);
       }
     };
 
-    checkStartProgress();
+    checkQuizCompletion();
   }, [user, router]);
 
   if (!user) {
@@ -59,6 +58,24 @@ export default function AdaptabilitasCareer() {
         </div>
       </div>
     );
+  }
+
+  // Jika sedang mengecek, tampilkan loading
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{
+        backgroundImage: 'url(/Background_Mulai.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}>
+        <LoadingSpinner size="lg" text="Memuat..." fullScreen={false} />
+      </div>
+    );
+  }
+
+  // Jika sudah pernah mengisi quiz, tidak perlu render QuizComponent (akan redirect)
+  if (hasCompletedQuiz) {
+    return null;
   }
 
   // Gunakan QuizComponent untuk START - quiz pengenalan Concern sampai Confidence

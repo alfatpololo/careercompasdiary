@@ -1,21 +1,23 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
-import { GameCard, GameButton } from '../../../components/GameUI';
+import { GameCard, GameButton, LoadingSpinner } from '../../../components/GameUI';
 
 const questions = [
-  'Saya mengikuti seluruh bagian sesi onboarding Website Career Compass Diary.',
-  'Penyampaian pelaksanaan untuk mengisi CAAS I dan menjalankan misi gamifikasi disampaikan dengan jelas.',
-  'Saya bertanya ketika ada bagian yang kurang jelas tentang Concern.',
-  'Waktu yang disediakan untuk menyelesaikan misi gamifikasi cukup dan digunakan dengan baik.',
-  'Konselor/guru BK memberi bantuan teknis atau bimbingan ketika saya mengalami kesulitan.'
+  'Saya memahami langkah-langkah penggunaan website Career Compass Diary',
+  'Penjelasan tentang fitur-fitur website Career Compass Diary disampaikan dengan jelas dan mudah dimengerti.',
+  'Saya merasa mampu mengoperasikan website Career Compass Diary secara mandiri pada kegiatan bimbingan karier',
+  'Saya memahami pentingnya menumbuhkan adaptabilitas karier bagi siswa di era modern',
+  'Kegiatan ini membantu saya merencanakan langkah awal untuk mengembangkan keterampilan adaptabilitas karier saya'
 ];
 
-export default function EvaluationProcess() {
+function EvaluationProcessContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
+  const isPosttest = searchParams?.get('posttest') === 'true';
   const [answers, setAnswers] = useState<number[]>([]);
 
   const handleAnswer = (index: number, value: number) => {
@@ -42,7 +44,12 @@ export default function EvaluationProcess() {
       });
 
       if (response.ok) {
-        router.push('/adaptabilitas/evaluation-result');
+        // Redirect ke evaluation-result dengan query parameter posttest jika ini posttest
+        if (isPosttest) {
+          router.push('/adaptabilitas/evaluation-result?posttest=true');
+        } else {
+          router.push('/adaptabilitas/evaluation-result');
+        }
       }
     } catch (error) {
       console.error('Error:', error);
@@ -124,14 +131,35 @@ export default function EvaluationProcess() {
                 </tbody>
               </table>
 
-              <div className="flex justify-between mt-6">
-                <GameButton onClick={() => router.back()} className="from-gray-400 to-gray-600">Cancel</GameButton>
-                <GameButton onClick={handleSubmit} className="from-green-400 to-green-600">Submit</GameButton>
-              </div>
             </div>
+          </div>
+          
+          {/* Buttons - outside grid, consistent position */}
+          <div className="flex justify-between mt-6 pt-4 border-t-2 border-white/30">
+            <GameButton onClick={() => router.back()} className="from-gray-400 to-gray-600">Cancel</GameButton>
+            <GameButton onClick={handleSubmit} className="from-green-400 to-green-600">Submit</GameButton>
           </div>
         </GameCard>
       </div>
     </div>
+  );
+}
+
+export default function EvaluationProcess() {
+  return (
+    <Suspense fallback={
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          backgroundImage: 'url(/Background_Mulai.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <LoadingSpinner size="lg" text="Memuat..." fullScreen={false} />
+      </div>
+    }>
+      <EvaluationProcessContent />
+    </Suspense>
   );
 }

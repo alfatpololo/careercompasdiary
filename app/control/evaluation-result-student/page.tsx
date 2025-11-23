@@ -68,7 +68,7 @@ export default function ControlEvaluationResultStudent() {
       }
 
       alert('Evaluasi hasil siswa tahap Control berhasil disimpan! ✅');
-      router.push('/control');
+      router.push('/journey');
     } catch (error) {
       console.error('[Control Evaluation Student Result] Error:', error);
       alert('Terjadi kesalahan saat menyimpan evaluasi.');

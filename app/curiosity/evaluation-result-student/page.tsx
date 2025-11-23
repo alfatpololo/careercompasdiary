@@ -68,7 +68,7 @@ export default function CuriosityEvaluationResultStudent() {
       }
 
       alert('Evaluasi hasil siswa tahap Curiosity berhasil disimpan! ✅');
-      router.push('/curiosity');
+      router.push('/journey');
     } catch (error) {
       console.error('[Curiosity Evaluation Student Result] Error:', error);
       alert('Terjadi kesalahan saat menyimpan evaluasi.');

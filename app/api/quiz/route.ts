@@ -3,7 +3,7 @@ import { adminDb } from '@/lib/firebaseAdmin';
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId, answers, scores, total, percent, category } = await request.json();
+    const { userId, answers, scores, total, percent, category, isPosttest } = await request.json();
 
     if (!userId || !answers || !scores) {
       return NextResponse.json(
@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
       total,
       percent,
       category,
+      isPosttest: isPosttest || false, // Tandai apakah ini posttest
       createdAt: new Date().toISOString(),
     });
 
@@ -55,18 +56,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Get quiz results by userId
+// Get quiz results by userId or all quizzes
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json(
-        { message: 'userId diperlukan' },
-        { status: 400 }
-      );
-    }
 
     if (!adminDb) {
       return NextResponse.json(
@@ -75,23 +69,44 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get quiz results from Firebase
-    const quizQuery = await adminDb.collection('quiz_results')
-      .where('userId', '==', userId)
-      .orderBy('createdAt', 'desc')
-      .get();
+    // If userId provided, get quizzes for that user
+    // Otherwise, get all quizzes
+    let quizQuery;
+    if (userId) {
+      quizQuery = await adminDb.collection('quiz_results')
+        .where('userId', '==', userId)
+        .get();
+    } else {
+      quizQuery = await adminDb.collection('quiz_results').get();
+    }
 
-    const results = quizQuery.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    const results = quizQuery.docs
+      .map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt || null,
+        };
+      })
+      .sort((a, b) => {
+        // Sort by createdAt descending (latest first)
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
 
     return NextResponse.json({ results });
 
   } catch (error) {
     console.error('Quiz get error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Quiz get error details:', {
+      message: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return NextResponse.json(
-      { message: 'Terjadi kesalahan saat mengambil data' },
+      { message: `Terjadi kesalahan saat mengambil data: ${errorMessage}` },
       { status: 500 }
     );
   }

@@ -223,9 +223,13 @@ function summariseAnswers(answers: number[] | undefined) {
     sum,
     max,
     percent,
-    category: scoreToCategory(percent),
+    category: scoreToCategory(Math.round((percent / 100) * 240), 240),
   };
 }
+
+type UserDoc = {
+  role?: 'guru' | 'siswa';
+};
 
 export default function EvaluationResults() {
   const router = useRouter();
@@ -233,6 +237,32 @@ export default function EvaluationResults() {
   const [docs, setDocs] = useState<EvaluationDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<'guru' | 'siswa' | null>(null);
+
+  // Fetch user role
+  useEffect(() => {
+    if (!user?.uid) {
+      setUserRole(null);
+      return;
+    }
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch(`/api/users?userId=${encodeURIComponent(user.uid)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (active) {
+            setUserRole((data.data as UserDoc)?.role || null);
+          }
+        }
+      } catch (error) {
+        console.error('[Evaluations] Failed to fetch user role:', error);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [user?.uid]);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -318,7 +348,7 @@ export default function EvaluationResults() {
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex items-center justify-between text-white">
           <div>
-            <GameBadge className="bg-emerald-400/90 text-indigo-900 border-white">
+            <GameBadge className="bg-emerald-500/90 text-white border-0">
               Evaluasi Hasil & Proses
             </GameBadge>
             <h1 className="text-3xl font-extrabold drop-shadow mt-2">
@@ -329,9 +359,14 @@ export default function EvaluationResults() {
               bawah untuk membuka kembali lembar evaluasi bila diperlukan.
             </p>
           </div>
-          <GameButton onClick={() => router.push('/results')} className="from-gray-400 to-gray-600">
-            Menu Hasil
-          </GameButton>
+          <div className="flex gap-2">
+            <GameButton onClick={() => router.push('/')} className="from-blue-500 to-blue-600">
+              ← Home
+            </GameButton>
+            <GameButton onClick={() => router.push('/results')} className="from-gray-400 to-gray-600">
+              Menu Hasil
+            </GameButton>
+          </div>
         </div>
 
         {loading ? (
@@ -343,21 +378,29 @@ export default function EvaluationResults() {
             {error}
           </GameCard>
         ) : (
-          evaluationStages.map((stage) => (
+          evaluationStages.map((stage) => {
+            // Filter entries berdasarkan role user
+            // Jika siswa, hanya tampilkan entries dengan role 'siswa'
+            // Jika guru, tampilkan semua entries
+            const filteredEntries = userRole === 'siswa' 
+              ? stage.entries.filter(entry => entry.role === 'siswa')
+              : stage.entries;
+
+            // Skip stage jika tidak ada entries setelah filter
+            if (filteredEntries.length === 0) return null;
+
+            return (
             <GameCard
               key={stage.stageId}
-              className="bg-gradient-to-br from-white/90 to-white/60 text-gray-800 border-4 border-white/70 space-y-4"
+              className="bg-gradient-to-br from-white/90 to-white/60 !text-gray-800 border-4 border-white/70 space-y-4"
             >
               <div className="space-y-1">
-                <GameBadge className="bg-emerald-500/80 border-white text-white">
-                  {stage.title}
-                </GameBadge>
-                <h2 className="text-2xl font-extrabold drop-shadow-sm">{stage.title}</h2>
-                <p className="text-sm font-semibold text-gray-600">{stage.description}</p>
+                <h2 className="text-2xl font-extrabold drop-shadow-sm !text-gray-800">{stage.title}</h2>
+                <p className="text-sm font-semibold !text-gray-600">{stage.description}</p>
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
-                {stage.entries.map((entry) => {
+                {filteredEntries.map((entry) => {
                   const doc = latestByType.get(entry.type);
                   const summary = summariseAnswers(doc?.answers);
                   const hasData = !!doc && summary.max > 0;
@@ -367,27 +410,27 @@ export default function EvaluationResults() {
                       className="bg-white/75 rounded-2xl border-2 border-white/60 p-4 space-y-3 flex flex-col"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold uppercase text-emerald-600 tracking-wide">
+                        <span className="text-xs font-bold uppercase !text-emerald-600 tracking-wide">
                           {entry.role === 'siswa' ? 'Siswa' : 'Guru BK'}
                         </span>
-                        <span className="text-xs font-semibold text-gray-500">
+                        <span className="text-xs font-semibold !text-gray-600">
                           {formatDate(doc?.createdAt)}
                         </span>
                       </div>
-                      <h3 className="text-lg font-bold text-gray-800">{entry.label}</h3>
+                      <h3 className="text-lg font-bold !text-gray-900">{entry.label}</h3>
 
                       {hasData ? (
                         <>
                           <div className="flex items-baseline gap-3">
-                            <p className="text-3xl font-black text-emerald-600">
+                            <p className="text-3xl font-black !text-emerald-600">
                               {summary.sum}
-                              <span className="text-base font-semibold text-gray-500"> / {summary.max}</span>
+                              <span className="text-base font-semibold !text-gray-700"> / {summary.max}</span>
                             </p>
                             <div className="space-y-1">
-                              <p className="text-sm font-semibold text-gray-600">
+                              <p className="text-sm font-semibold !text-gray-800">
                                 {summary.percent}% • {summary.category}
                               </p>
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs !text-gray-600">
                                 Interpretasi kategori menggunakan skala 1-3 tiap pernyataan.
                               </p>
                             </div>
@@ -401,7 +444,7 @@ export default function EvaluationResults() {
                         </>
                       ) : (
                         <>
-                          <p className="text-sm font-semibold text-gray-600">
+                          <p className="text-sm font-semibold !text-gray-800">
                             Belum ada jawaban yang tersimpan untuk formulir ini.
                           </p>
                           <GameButton
@@ -417,7 +460,8 @@ export default function EvaluationResults() {
                 })}
               </div>
             </GameCard>
-          ))
+            );
+          })
         )}
 
         <div className="flex justify-between">

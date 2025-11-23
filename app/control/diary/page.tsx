@@ -109,9 +109,14 @@ export default function ControlDiary() {
               Tuliskan keputusan yang kamu ambil dan bagaimana keputusan tersebut mendukung rencana kariermu.
             </p>
           </div>
-          <GameButton onClick={() => router.push('/control')} className="from-gray-400 to-gray-600">
-            Menu Control
-          </GameButton>
+          <div className="flex gap-2">
+            <GameButton onClick={() => router.push('/')} className="from-blue-500 to-blue-600">
+              ← Home
+            </GameButton>
+            <GameButton onClick={() => router.push('/control')} className="from-gray-400 to-gray-600">
+              Menu Control
+            </GameButton>
+          </div>
         </div>
 
         <GameCard className="bg-gradient-to-br from-emerald-400 to-teal-500">

@@ -240,16 +240,17 @@ export const weightedIntroSlides: Record<WeightedStageId, IntroSlide[]> = {
       key: 'concern-intro-1',
       title: 'Kepedulian',
       paragraphs: [
-        'Kepedulian dalam hal adaptasi karier berkaitan dengan kesadaran seseorang tentang perubahan yang terjadi di tempat kerja dan dampaknya pada jalur karier mereka. Savickas (2013) menyatakan bahwa mereka yang memiliki kepedulian lebih besar cenderung lebih aktif dalam merencanakan masa depan karier mereka. Rencana karier yang baik tidak hanya membantu dalam mencapai tujuan profesional, tetapi juga memberikan rasa aman dan kepastian di tengah situasi kerja yang tidak menentu. Data dari Biro Statistik Tenaga Kerja AS menunjukkan bahwa orang yang memiliki rencana karier yang jelas lebih cenderung meraih tingkat kepuasan kerja yang tinggi (Bureau of Labor Statistics, 2021).',
-        'Sebagai contoh, penelitian yang dilakukan oleh Rudolph et al. (2019) menunjukkan bahwa orang yang secara aktif merencanakan karier mereka dapat menyesuaikan diri dengan perubahan dalam industri yang cepat. Mereka yang terlibat dalam perencanaan karier tidak hanya mempersiapkan diri untuk menghadapi tantangan yang ada, tetapi juga menemukan peluang yang sebelumnya mungkin terlewatkan. Hal ini menunjukkan bahwa perhatian pada perkembangan karier dapat meningkatkan daya saing individu di pasar kerja.',
+        'Kepedulian terhadap karier merupakan suatu konsep yang sangat penting, terutama bagi siswa Sekolah Menengah Kejuruan (SMK). Definisi ini mencakup perhatian yang mendalam dan kesiapan dalam merencanakan arah hidup profesional. Dalam konteks ini, kepedulian terhadap karier bukan hanya sekadar pemikiran tentang pekerjaan di masa depan, tetapi juga melibatkan proses aktif dalam merancang langkah-langkah yang diperlukan untuk mencapai tujuan tersebut.',
+        'Mengapa kepedulian terhadap karier sangat penting bagi siswa SMK? Pertama-tama, siswa di tingkat ini berada pada fase transisi yang krusial antara pendidikan formal dan dunia kerja. Mereka sering kali dihadapkan pada pilihan yang menentukan, seperti bidang pekerjaan yang ingin mereka geluti dan langkah-langkah yang perlu diambil untuk mencapai tujuan tersebut. Dengan memiliki kepedulian yang tinggi terhadap karier, siswa dapat mengubah mimpi-mimpi mereka menjadi rencana yang lebih konkret dan terarah. Misalnya, seorang siswa yang bercita-cita menjadi seorang desainer grafis harus memahami langkah-langkah yang diperlukan, seperti mengambil kursus tambahan, membangun portofolio, dan mencari pengalaman kerja melalui magang.',
+        'Selain itu, kepedulian terhadap karier juga membantu siswa untuk mengidentifikasi minat dan bakat mereka. Melalui eksplorasi diri dan refleksi, siswa dapat menemukan apa yang benar-benar mereka sukai dan bagaimana hal tersebut dapat diterapkan dalam dunia kerja. Contoh yang relevan adalah seorang siswa yang menyukai teknologi dan memiliki keterampilan dalam pemrograman. Dengan kepedulian yang tepat, siswa tersebut dapat memilih untuk mendalami bidang teknologi informasi dan mencari peluang untuk belajar lebih lanjut, baik melalui kursus online maupun proyek-proyek praktis.',
       ],
     },
     {
       key: 'concern-intro-2',
       title: 'Kepedulian',
       paragraphs: [
-        'Penting juga untuk mencatat bahwa kepedulian terhadap karier tidak hanya berkaitan dengan pencarian pekerjaan, tetapi juga dengan pengembangan diri yang berkelanjutan. Dalam dunia yang terus berubah ini, keterampilan dan pengetahuan yang relevan menjadi semakin penting. Siswa yang memiliki kepedulian terhadap karier akan lebih cenderung untuk terus belajar dan beradaptasi dengan perubahan yang terjadi di industri.',
-        'Sebagai contoh, seorang siswa yang awalnya berfokus pada keahlian tertentu dalam bidang akuntansi mungkin akan menyadari pentingnya memahami teknologi baru, seperti perangkat lunak akuntansi berbasis cloud, untuk tetap kompetitif di pasar kerja. Transisi dari sekolah ke dunia kerja sering kali menjadi tantangan besar bagi banyak siswa. Namun, dengan adanya kepedulian yang kuat terhadap karier, mereka dapat merencanakan langkah-langkah yang lebih terstruktur. Hal ini termasuk mencari informasi tentang peluang kerja, mengikuti seminar atau workshop, serta membangun jaringan yang dapat membantu mereka dalam mencari pekerjaan.',
+        'Penting juga untuk mencatat bahwa kepedulian terhadap karier tidak hanya berkaitan dengan pencarian pekerjaan, tetapi juga dengan pengembangan diri yang berkelanjutan. Dalam dunia yang terus berubah ini, keterampilan dan pengetahuan yang relevan menjadi semakin penting. Siswa yang memiliki kepedulian terhadap karier akan lebih cenderung untuk terus belajar dan beradaptasi dengan perubahan yang terjadi di industri. Sebagai contoh, seorang siswa yang awalnya berfokus pada keahlian tertentu dalam bidang akuntansi mungkin akan menyadari pentingnya memahami teknologi baru, seperti perangkat lunak akuntansi berbasis cloud, untuk tetap kompetitif di pasar kerja.',
+        'Transisi dari sekolah ke dunia kerja sering kali menjadi tantangan besar bagi banyak siswa. Namun, dengan adanya kepedulian yang kuat terhadap karier, mereka dapat merencanakan langkah-langkah yang lebih terstruktur. Hal ini termasuk mencari informasi tentang peluang kerja, mengikuti seminar atau workshop, serta membangun jaringan yang dapat membantu mereka dalam mencari pekerjaan. Siswa yang aktif dalam mencari informasi dan terlibat dalam kegiatan yang berkaitan dengan karier mereka akan lebih siap menghadapi tantangan yang ada.',
         'Dalam kesimpulan, kepedulian terhadap karier merupakan aspek yang sangat penting bagi siswa SMK. Ini bukan hanya tentang mempersiapkan diri untuk memasuki dunia kerja, tetapi juga tentang membangun fondasi yang kuat untuk pengembangan diri di masa depan. Dengan memahami pentingnya merencanakan karier dan mengambil langkah-langkah yang tepat, siswa dapat mengubah impian mereka menjadi kenyataan. Melalui eksplorasi minat, pengembangan keterampilan, dan pencarian informasi yang aktif, mereka dapat menciptakan jalur karier yang sukses dan memuaskan. Oleh karena itu, penting bagi semua pihak, termasuk pendidik dan orang tua, untuk mendukung siswa dalam perjalanan mereka menuju masa depan yang cerah.',
       ],
     },
@@ -257,9 +258,8 @@ export const weightedIntroSlides: Record<WeightedStageId, IntroSlide[]> = {
       key: 'concern-instructions',
       title: 'Instruksi Penilaian Concern',
       paragraphs: [
-        'Terdapat 6 pertanyaan pada bagian CONCERN. Setiap soal memiliki 4 jawaban yang masing-masing jawaban memiliki nilai tertentu dari 10% hingga 40%. Anda harus memilih jawaban yang paling mencerminkan dimensi kepedulian agar mendapatkan nilai sesuai target.',
-        'Pilih jawaban terbaik pada setiap soal untuk mencapai skor minimal. Nilai akhir merupakan akumulasi dari seluruh jawaban.',
-        '• Pilihan 10% = gambaran awal.\n• Pilihan 20% = arah dan pemahaman dasar.\n• Pilihan 30% = langkah yang mulai terstruktur.\n• Pilihan 40% = kepedulian optimal dan terarah menuju dunia kerja.',
+        'Terdapat 6 pertanyaan pada bagian CONCERN. Setiap soal memiliki 4 jawaban. Pilih jawaban yang paling mencerminkan dimensi kepedulianmu terhadap karier.',
+        'Pilih jawaban terbaik pada setiap soal. Nilai akhir merupakan akumulasi dari seluruh jawaban.',
       ],
     },
   ],
@@ -268,36 +268,27 @@ export const weightedIntroSlides: Record<WeightedStageId, IntroSlide[]> = {
       key: 'control-intro-1',
       title: 'Kendali Diri',
       paragraphs: [
-        'Kendali diri, atau self-regulation, adalah kemampuan penting yang dimiliki individu dalam mengelola tindakan dan membuat keputusan yang tepat. Dalam konteks pendidikan dan pengembangan karier, kendali diri tidak hanya berkaitan dengan kemampuan untuk menahan diri dari godaan, tetapi juga mencakup tanggung jawab yang lebih besar terhadap langkah-langkah yang diambil dalam hidup.',
-        'Pentingnya kendali diri dalam kehidupan siswa sangatlah signifikan. Siswa yang memiliki kemampuan ini cenderung lebih proaktif dalam mengambil inisiatif. Mereka tidak hanya menunggu kesempatan datang, tetapi berusaha menciptakan peluang untuk diri mereka sendiri.',
-        'Misalnya, seorang siswa yang memiliki kendali diri yang baik mungkin akan mencari proyek tambahan di luar kurikulum untuk memperdalam pemahaman mereka tentang suatu topik. Mereka memahami bahwa usaha ekstra ini akan memberikan mereka keunggulan di masa depan.',
+        'Kendali diri, atau self-regulation, adalah kemampuan penting yang dimiliki individu dalam mengelola tindakan dan membuat keputusan yang tepat. Dalam konteks pendidikan dan pengembangan karier, kendali diri tidak hanya berkaitan dengan kemampuan untuk menahan diri dari godaan, tetapi juga mencakup tanggung jawab yang lebih besar terhadap langkah-langkah yang diambil dalam hidup. Hal ini mencakup berbagai aspek, mulai dari pengaturan emosi hingga pengambilan keputusan strategis yang akan berdampak pada masa depan seseorang.',
+        'Pentingnya kendali diri dalam kehidupan siswa sangatlah signifikan. Siswa yang memiliki kemampuan ini cenderung lebih proaktif dalam mengambil inisiatif. Mereka tidak hanya menunggu kesempatan datang, tetapi berusaha menciptakan peluang untuk diri mereka sendiri. Misalnya, seorang siswa yang memiliki kendali diri yang baik mungkin akan mencari proyek tambahan di luar kurikulum untuk memperdalam pemahaman mereka tentang suatu topik. Mereka memahami bahwa usaha ekstra ini akan memberikan mereka keunggulan di masa depan. Dalam situasi sulit, siswa dengan kendali diri tidak mudah menyerah. Mereka mampu menghadapi tantangan dan mencari solusi yang kreatif, bukan hanya berfokus pada masalah yang ada. Contoh nyata dapat dilihat pada siswa yang mengalami kesulitan dalam mata pelajaran tertentu; alih-alih menyerah, mereka akan mencari bantuan dari guru atau teman, atau bahkan menggunakan sumber daya online untuk memahami materi yang sulit.',
+        'Mengelola emosi juga merupakan bagian integral dari kendali diri. Ketika siswa dapat mengatur emosinya, mereka lebih mampu untuk tetap tenang dan fokus dalam situasi yang menekan. Misalnya, saat menghadapi ujian yang sulit, siswa yang mampu mengelola kecemasan mereka akan lebih baik dalam berkonsentrasi dan memberikan performa terbaiknya. Dalam hal ini, teknik seperti pernapasan dalam atau meditasi dapat menjadi alat yang efektif untuk menenangkan pikiran dan membantu siswa tetap fokus pada tujuan mereka. Dengan mengendalikan emosi, siswa juga dapat berinteraksi dengan lebih baik dengan teman sebaya dan guru, menciptakan lingkungan belajar yang positif',
       ],
     },
     {
       key: 'control-intro-2',
       title: 'Kendali Diri',
       paragraphs: [
-        'Dalam situasi sulit, siswa dengan kendali diri tidak mudah menyerah. Mereka mampu menghadapi tantangan dan mencari solusi yang kreatif, bukan hanya berfokus pada masalah yang ada. Contoh nyata dapat dilihat pada siswa yang mengalami kesulitan dalam mata pelajaran tertentu; alih-alih menyerah, mereka akan mencari bantuan dari guru atau teman, atau bahkan menggunakan sumber daya online untuk memahami materi yang sulit.',
-        'Mengelola emosi juga merupakan bagian integral dari kendali diri. Ketika siswa dapat mengatur emosinya, mereka lebih mampu untuk tetap tenang dan fokus dalam situasi yang menekan. Dengan mengendalikan emosi, siswa juga dapat berinteraksi dengan lebih baik dengan teman sebaya dan guru, menciptakan lingkungan belajar yang positif.',
-        'Proses pengambilan keputusan sangat dipengaruhi oleh kendali diri. Siswa yang mampu mengevaluasi pilihan mereka dengan cermat dan mempertimbangkan konsekuensi dari setiap tindakan cenderung membuat keputusan yang lebih baik.',
-      ],
-    },
-    {
-      key: 'control-intro-3',
-      title: 'Kendali Diri',
-      paragraphs: [
-        'Transisi dari satu keputusan ke keputusan lainnya juga memerlukan kendali diri. Siswa yang mampu memahami bahwa setiap keputusan memiliki dampak jangka panjang akan lebih berhati-hati dalam memilih langkah mereka.',
-        'Dengan demikian, kendali diri sangat penting dalam membentuk karakter dan pola pikir siswa. Kemampuan untuk mengelola tindakan, bertanggung jawab atas keputusan, dan tetap termotivasi dalam menghadapi tantangan adalah keterampilan yang akan membawa mereka menuju kesuksesan.',
-        'Kesimpulannya, kendali diri adalah fondasi yang kuat bagi pengambilan keputusan yang efektif dan pengelolaan tindakan. Dengan mengembangkan kemampuan ini, siswa dapat mengambil inisiatif, menghadapi tantangan dengan keberanian, dan membuat keputusan yang bijaksana untuk masa depan mereka.',
+        'Proses pengambilan keputusan juga sangat dipengaruhi oleh kendali diri. Siswa yang mampu mengevaluasi pilihan mereka dengan cermat dan mempertimbangkan konsekuensi dari setiap tindakan cenderung membuat keputusan yang lebih baik. Sebagai contoh, ketika dihadapkan pada pilihan untuk bergabung dengan organisasi ekstrakurikuler, siswa yang memiliki kendali diri akan mempertimbangkan waktu yang tersedia, komitmen yang diperlukan, dan bagaimana kegiatan tersebut dapat mendukung tujuan jangka panjang mereka. Mereka tidak hanya akan memilih berdasarkan popularitas atau tekanan dari teman, tetapi akan melakukan analisis yang mendalam tentang apa yang terbaik untuk perkembangan diri mereka.',
+        'Transisi dari satu keputusan ke keputusan lainnya juga memerlukan kendali diri. Siswa yang mampu memahami bahwa setiap keputusan memiliki dampak jangka panjang akan lebih berhati-hati dalam memilih langkah mereka. Misalnya, ketika memilih jurusan di perguruan tinggi, siswa yang memiliki kendali diri akan melakukan riset tentang prospek karier, minat pribadi, dan kemampuan mereka, sehingga mereka dapat membuat pilihan yang lebih bijaksana. Mereka tidak hanya terfokus pada keputusan itu sendiri, tetapi juga pada bagaimana keputusan tersebut akan membentuk masa depan mereka.',
+        'Dengan demikian, kendali diri sangat penting dalam membentuk karakter dan pola pikir siswa. Kemampuan untuk mengelola tindakan, bertanggung jawab atas keputusan, dan tetap termotivasi dalam menghadapi tantangan adalah keterampilan yang akan membawa mereka menuju kesuksesan. Siswa yang memiliki kendali diri yang baik tidak hanya akan unggul di lingkungan akademis, tetapi juga akan siap menghadapi tantangan di dunia profesional.',
+        'Kesimpulannya, kendali diri adalah fondasi yang kuat bagi pengambilan keputusan yang efektif dan pengelolaan tindakan. Dengan mengembangkan kemampuan ini, siswa dapat mengambil inisiatif, menghadapi tantangan dengan keberanian, dan membuat keputusan yang bijaksana untuk masa depan mereka. Kendali diri bukan hanya tentang menahan diri dari godaan, tetapi juga tentang memiliki visi yang jelas dan komitmen untuk mencapai tujuan jangka panjang. Oleh karena itu, penting bagi pendidik dan orang tua untuk mendukung pengembangan kendali diri ini pada siswa, agar mereka dapat tumbuh menjadi individu yang bertanggung jawab dan sukses di masa depan.',
       ],
     },
     {
       key: 'control-instructions',
       title: 'Instruksi Penilaian Control',
       paragraphs: [
-        'Terdapat 6 pertanyaan pada bagian CONTROL. Setiap soal memiliki 4 jawaban yang masing-masing jawaban memiliki nilai tertentu dari 10% hingga 40%. Anda harus menemukan jawaban yang benar-benar menggambarkan dimensi kontrol diri sehingga mendapatkan nilai yang sesuai target.',
-        'Pilih jawaban terbaik pada setiap soal untuk mencapai skor minimal. Nilai akhir merupakan akumulasi dari seluruh jawaban.',
-        '• 10% = tindakan awal yang belum konsisten.\n• 20% = mulai menunjukkan kebiasaan positif.\n• 30% = perilaku terstruktur dengan catatan kemajuan.\n• 40% = kontrol diri optimal dengan evaluasi berkelanjutan.',
+        'Terdapat 6 pertanyaan pada bagian CONTROL. Setiap soal memiliki 4 jawaban. Pilih jawaban yang benar-benar menggambarkan dimensi kontrol dirimu dalam mengambil keputusan karier.',
+        'Pilih jawaban terbaik pada setiap soal. Nilai akhir merupakan akumulasi dari seluruh jawaban.',
       ],
     },
   ],
@@ -306,33 +297,26 @@ export const weightedIntroSlides: Record<WeightedStageId, IntroSlide[]> = {
       key: 'curiosity-intro-1',
       title: 'Keingintahuan',
       paragraphs: [
-        'Keingintahuan adalah dorongan alami yang dimiliki setiap individu untuk mencari informasi, memahami dunia di sekitar mereka, dan mengeksplorasi kemungkinan yang ada. Dalam konteks karier, rasa ingin tahu mendorong kita untuk mencoba opsi baru, bereksperimen dengan berbagai jalur, dan mengembangkan keterampilan yang mungkin tidak terduga.',
-        'Eksplorasi yang luas dapat membuka kesempatan yang sebelumnya tidak terpikirkan. Ketika kita bersedia menjelajahi berbagai bidang, kita dapat menemukan minat dan bakat baru, serta meningkatkan nilai diri di dunia kerja yang menghargai keterampilan multidisiplin.',
+        'Keingintahuan adalah dorongan alami yang dimiliki setiap individu untuk mencari informasi, memahami dunia di sekitar mereka, dan mengeksplorasi kemungkinan yang ada. Dalam konteks karier, keingintahuan ini mendorong individu untuk mencoba opsi baru, bereksperimen dengan berbagai jalur, dan mengembangkan keterampilan yang mungkin tidak terduga sebelumnya. Dalam dunia yang terus berubah dan berkembang dengan cepat, memiliki rasa ingin tahu yang tinggi menjadi semakin penting. Hal ini tidak hanya membuka pintu bagi berbagai peluang, tetapi juga membantu individu menghindari risiko terjebak dalam pilihan sempit yang dapat membatasi potensi mereka.',
+        'Salah satu alasan utama mengapa keingintahuan sangat penting adalah karena eksplorasi yang luas dapat membuka kesempatan yang mungkin sebelumnya tidak terpikirkan. Ketika seseorang bersedia untuk menjelajahi berbagai bidang, mereka dapat menemukan minat dan bakat baru yang mungkin tidak mereka sadari sebelumnya. Misalnya, seorang insinyur yang mulai tertarik pada desain grafis dapat menemukan cara untuk menggabungkan kedua bidang tersebut, menciptakan produk yang inovatif dan menarik. Proses eksplorasi ini tidak hanya memperkaya pengalaman pribadi, tetapi juga meningkatkan nilai seseorang di pasar kerja. Dalam era di mana keterampilan multidisiplin semakin dihargai, keingintahuan menjadi aset yang sangat berharga.',
+        'Namun, penting untuk memahami bahwa keingintahuan tidak hanya tentang mencari informasi, tetapi juga tentang berani mengambil risiko. Ketika seseorang menjelajahi jalur karier yang baru, mereka sering kali dihadapkan pada ketidakpastian dan tantangan. Dalam situasi ini, sikap positif terhadap kegagalan menjadi sangat penting. Misalnya, seorang pengusaha yang memulai bisnis baru mungkin mengalami beberapa kegagalan sebelum akhirnya menemukan model bisnis yang berhasil. Setiap kegagalan tersebut memberikan pelajaran berharga yang dapat digunakan untuk meningkatkan strategi di masa depan. Dengan demikian, keingintahuan yang didukung oleh keberanian untuk beradaptasi dan belajar dari pengalaman menjadi kunci untuk mencapai kesuksesan.',
       ],
     },
     {
       key: 'curiosity-intro-2',
       title: 'Keingintahuan',
       paragraphs: [
-        'Keingintahuan tidak hanya tentang mencari informasi, tetapi juga berani mengambil risiko. Saat menjelajahi jalur karier baru, kita menghadapi ketidakpastian dan tantangan. Sikap positif terhadap kegagalan dan kemampuan beradaptasi adalah kunci untuk terus belajar dari pengalaman.',
-        'Rasa ingin tahu juga memperkaya hubungan interpersonal. Dengan menunjukkan minat tulus terhadap orang lain, kita membangun koneksi, belajar dari perspektif berbeda, dan menciptakan kolaborasi yang mendorong inovasi.',
-      ],
-    },
-    {
-      key: 'curiosity-intro-3',
-      title: 'Keingintahuan',
-      paragraphs: [
-        'Untuk memanfaatkan keingintahuan secara efektif, kita perlu menggabungkannya dengan kemampuan berpikir kritis. Analisis berbagai sudut pandang membantu kita mengambil keputusan karier yang terinformasi dan penuh pertimbangan.',
-        'Keingintahuan dan eksplorasi adalah fondasi penting dalam pengembangan pribadi dan profesional. Dengan rasa ingin tahu yang tinggi, kita tidak hanya membuka diri terhadap peluang, tetapi juga menemukan jalur karier yang bermakna.',
+        'Selain itu, keingintahuan juga dapat memperkaya hubungan interpersonal. Ketika seseorang menunjukkan minat yang tulus terhadap orang lain, mereka tidak hanya membangun koneksi yang lebih dalam, tetapi juga membuka diri untuk belajar dari pengalaman dan perspektif orang lain. Misalnya, dalam lingkungan kerja, seorang karyawan yang aktif bertanya dan mendengarkan rekan-rekannya dapat menciptakan suasana kolaboratif yang mendorong inovasi. Dengan berinteraksi secara aktif dan mengeksplorasi ide-ide baru, tim dapat menemukan solusi yang lebih baik dan lebih kreatif untuk masalah yang dihadapi.',
+        'Namun, untuk memanfaatkan keingintahuan secara efektif, individu perlu mengembangkan keterampilan tertentu. Salah satunya adalah kemampuan untuk berpikir kritis. Dalam proses eksplorasi, penting untuk tidak hanya menerima informasi begitu saja, tetapi juga menganalisis dan mengevaluasi berbagai sudut pandang. Dengan berpikir kritis, seseorang dapat membuat keputusan yang lebih baik dan lebih terinformasi mengenai jalur karier yang ingin diambil. Misalnya, seseorang yang mempertimbangkan untuk beralih dari satu industri ke industri lain harus melakukan riset mendalam tentang tren pasar, keterampilan yang dibutuhkan, dan potensi pertumbuhan di bidang baru tersebut.',
+        'Sebagai penutup, keingintahuan dan eksplorasi merupakan dua elemen yang saling terkait dan sangat penting dalam pengembangan pribadi dan profesional. Dengan memiliki rasa ingin tahu yang tinggi, individu tidak hanya dapat membuka diri terhadap berbagai peluang, tetapi juga menghindari risiko terjebak dalam pilihan sempit. Melalui eksplorasi yang berani dan berpikir kritis, seseorang dapat menemukan jalur karier yang lebih memuaskan dan bermakna. Oleh karena itu, penting bagi setiap individu untuk terus mendorong rasa ingin tahu mereka dan berani menjelajahi berbagai kemungkinan yang ada di depan mereka.',
       ],
     },
     {
       key: 'curiosity-instructions',
       title: 'Instruksi Penilaian Curiosity',
       paragraphs: [
-        'Terdapat 6 pertanyaan pada bagian CURIOSITY. Setiap soal memiliki 4 jawaban dengan bobot 10% hingga 40%. Pilih jawaban yang paling menggambarkan rasa ingin tahu dan eksplorasimu agar mencapai nilai target.',
-        'Nilai akhir merupakan akumulasi dari seluruh jawaban. Fokus pada kombinasi eksplorasi, refleksi, dan keberanian mencoba hal baru.',
-        '• 10% = eksplorasi awal.\n• 20% = mengeksplorasi beberapa opsi.\n• 30% = refleksi dan pengujian hasil.\n• 40% = eksplorasi mendalam dengan rencana tindakan lanjut.',
+        'Terdapat 6 pertanyaan pada bagian CURIOSITY. Setiap soal memiliki 4 jawaban. Pilih jawaban yang paling menggambarkan rasa ingin tahu dan eksplorasimu dalam karier.',
+        'Pilih jawaban terbaik pada setiap soal. Nilai akhir merupakan akumulasi dari seluruh jawaban.',
       ],
     },
   ],
@@ -341,42 +325,78 @@ export const weightedIntroSlides: Record<WeightedStageId, IntroSlide[]> = {
       key: 'confidence-intro-1',
       title: 'Kepercayaan Diri',
       paragraphs: [
-        'Kepercayaan diri adalah keyakinan bahwa kita mampu menyelesaikan tugas dan menghadapi tantangan, terutama dalam konteks karier. Sikap ini menjadi fondasi penting agar kita berani mengambil langkah strategis demi masa depan.',
-        'Siswa yang percaya diri cenderung proaktif: melamar pekerjaan, memimpin proyek, hingga bernegosiasi tentang peluang. Sebaliknya, kurang percaya diri dapat membuat mereka ragu dan melewatkan kesempatan berharga.',
+        'Kepercayaan diri atau self-efficacy, merupakan salah satu komponen penting dalam pengembangan pribadi dan profesional seseorang. Secara sederhana, kepercayaan diri adalah keyakinan individu akan kemampuan mereka untuk menyelesaikan tugas dan menghadapi tantangan yang ada di depan mereka, terutama dalam konteks karier. Dalam dunia yang semakin kompetitif ini, memiliki kepercayaan diri yang tinggi sangatlah penting, karena dapat mempengaruhi segala aspek kehidupan, mulai dari pendidikan hingga pekerjaan.',
+        'Kepercayaan diri berfungsi sebagai pendorong utama bagi siswa untuk mengambil langkah-langkah yang diperlukan dalam mencapai tujuan mereka. Misalnya, seorang siswa yang percaya diri akan lebih cenderung untuk melamar pekerjaan, bernegosiasi tentang gaji, atau bahkan mencoba untuk memimpin sebuah proyek meskipun ada risiko kegagalan. Sebaliknya, siswa yang kurang percaya diri mungkin akan ragu untuk mengambil inisiatif, sehingga melewatkan berbagai kesempatan yang berharga. Hal ini menunjukkan bahwa kepercayaan diri bukan hanya sekadar perasaan positif, tetapi juga merupakan faktor kunci yang dapat membuka pintu menuju kesuksesan.',
+        'Salah satu contoh nyata dari pentingnya kepercayaan diri dapat dilihat dalam dunia kerja. Misalnya, seorang lulusan baru yang melamar pekerjaan di perusahaan besar. Jika lulusan tersebut memiliki kepercayaan diri yang tinggi, mereka akan lebih berani untuk menghadapi wawancara, menjawab pertanyaan dengan tegas, dan menunjukkan kemampuan serta keahlian yang dimiliki. Dalam situasi ini, kepercayaan diri tidak hanya membantu mereka untuk tampil lebih baik, tetapi juga meningkatkan peluang mereka untuk diterima. Di sisi lain, lulusan yang kurang percaya diri mungkin akan merasa terintimidasi dan tidak mampu mengekspresikan diri dengan baik, sehingga mengurangi peluang mereka untuk mendapatkan pekerjaan yang diinginkan.',
       ],
     },
     {
       key: 'confidence-intro-2',
       title: 'Kepercayaan Diri',
       paragraphs: [
-        'Kepercayaan diri juga menentukan bagaimana kita bangkit dari kegagalan. Individu yang yakin pada kemampuannya akan melihat penolakan sebagai pelajaran, bukan sebagai akhir dari segalanya.',
-        'Untuk menguatkan rasa percaya diri, tetapkan tujuan yang realistis, rayakan kemajuan kecil, dan manfaatkan dukungan sosial yang membangun. Lingkungan positif mempercepat pengembangan rasa yakin terhadap diri sendiri.',
-      ],
-    },
-    {
-      key: 'confidence-intro-3',
-      title: 'Kepercayaan Diri',
-      paragraphs: [
-        'Dengan keyakinan diri yang kuat, kita lebih berani mengambil risiko, menghadapi tantangan, dan menyusun strategi baru saat situasi berubah. Ini adalah modal utama untuk berhasil di pendidikan maupun dunia kerja.',
-        'Gunakan kesempatan ini untuk merefleksikan bagaimana kamu membangun rasa percaya diri. Pilih jawaban yang paling mencerminkan kebiasaanmu dalam menghadapi tugas, kegagalan, dan dukungan sosial.',
+        'Selain itu, kepercayaan diri juga berperan penting dalam kemampuan seseorang untuk bertahan dalam menghadapi kegagalan. Dalam perjalanan karier, tidak jarang seseorang mengalami kegagalan atau penolakan. Namun, individu yang memiliki kepercayaan diri yang kuat cenderung lebih mampu bangkit dari kegagalan tersebut. Mereka melihat kegagalan sebagai bagian dari proses belajar dan kesempatan untuk memperbaiki diri, bukan sebagai akhir dari segalanya. Misalnya, seorang pengusaha yang mengalami kegagalan dalam usaha pertamanya mungkin akan merasa kecewa, tetapi dengan kepercayaan diri yang tinggi, mereka akan berusaha untuk menganalisis kesalahan yang terjadi dan mencoba lagi dengan pendekatan yang lebih baik. Dalam hal ini, kepercayaan diri berfungsi sebagai fondasi yang memungkinkan seseorang untuk terus berjuang meskipun dihadapkan pada berbagai rintangan.',
+        'Untuk mengembangkan kepercayaan diri, ada beberapa strategi yang dapat diterapkan. Salah satunya adalah dengan menetapkan tujuan yang realistis dan terukur. Dengan mencapai tujuan-tujuan kecil, individu akan merasakan peningkatan kepercayaan diri seiring dengan kemajuan yang dicapai. Misalnya, seorang siswa yang ingin meningkatkan kemampuan berbicara di depan umum dapat mulai dengan berbicara di depan teman-teman terdekatnya sebelum akhirnya tampil di depan audiens yang lebih besar. Setiap pencapaian kecil akan memberikan dorongan positif yang memperkuat kepercayaan diri mereka.',
+        'Selain itu, penting juga untuk mengelilingi diri dengan orang-orang yang mendukung dan memberikan feedback konstruktif. Lingkungan sosial yang positif dapat membantu individu merasa lebih percaya diri. Misalnya, seorang siswa yang didukung oleh teman-teman dan keluarga yang percaya pada kemampuannya akan merasa lebih termotivasi untuk menghadapi tantangan. Sebaliknya, kritik yang tidak membangun dapat merusak kepercayaan diri dan menghambat kemajuan.',
+        'Dalam kesimpulannya, kepercayaan diri adalah elemen krusial dalam mencapai kesuksesan, baik di bidang pendidikan maupun karier. Dengan memiliki keyakinan akan kemampuan diri, individu akan lebih berani mengambil risiko, menghadapi tantangan, dan bangkit dari kegagalan. Oleh karena itu, penting untuk terus mengembangkan kepercayaan diri melalui pencapaian tujuan, dukungan sosial, dan pengembangan diri. Dengan cara ini, setiap individu dapat memaksimalkan potensi mereka dan meraih keberhasilan yang diimpikan.',
       ],
     },
     {
       key: 'confidence-instructions',
       title: 'Instruksi Penilaian Confidence',
       paragraphs: [
-        'Terdapat 6 pertanyaan pada bagian CONFIDENCE. Setiap soal memiliki 4 jawaban dengan bobot 10% hingga 40%. Pilih jawaban yang paling menggambarkan kemampuanmu membangun kepercayaan diri.',
-        'Nilai akhir merupakan akumulasi dari seluruh jawaban. Fokus pada langkah nyata yang kamu lakukan saat menghadapi tantangan dan mengembangkan keyakinan diri.',
-        '• 10% = mencoba secara sederhana.\n• 20% = mulai konsisten dengan dukungan.\n• 30% = refleksi dan perbaikan strategi.\n• 40% = perencanaan matang dan evaluasi berkelanjutan.',
+        'Terdapat 6 pertanyaan pada bagian CONFIDENCE. Setiap soal memiliki 4 jawaban. Pilih jawaban yang paling menggambarkan kemampuanmu membangun kepercayaan diri dalam menghadapi tantangan karier.',
+        'Pilih jawaban terbaik pada setiap soal. Nilai akhir merupakan akumulasi dari seluruh jawaban.',
       ],
     },
   ],
 };
 
-export function scoreToCategory(percent: number): 'Rendah' | 'Sedang' | 'Tinggi' {
-  if (percent >= 70) return 'Tinggi';
-  if (percent >= 50) return 'Sedang';
-  return 'Rendah';
+export type ScoreCategory = 'Very High' | 'High' | 'Low' | 'Very Low';
+
+export function scoreToCategory(score: number, maxScore: number = 240): ScoreCategory {
+  const percent = (score / maxScore) * 100;
+  if (score >= 240) return 'Very High'; // 100% - Lolos otomatis
+  if (score >= 180) return 'High'; // 75% - Lolos
+  if (score >= 120) return 'Low'; // 50% - Ulang materi + Remedial + retest
+  return 'Very Low'; // < 50% (< 120) - Ulang intensif
+}
+
+export function getCategoryInfo(category: ScoreCategory): { 
+  label: string; 
+  action: string; 
+  color: string;
+  passed: boolean;
+} {
+  switch (category) {
+    case 'Very High':
+      return {
+        label: 'Sangat Tinggi',
+        action: 'Lolos otomatis',
+        color: 'text-green-700 bg-green-100',
+        passed: true,
+      };
+    case 'High':
+      return {
+        label: 'Tinggi',
+        action: 'Lolos',
+        color: 'text-blue-700 bg-blue-100',
+        passed: true,
+      };
+    case 'Low':
+      return {
+        label: 'Rendah',
+        action: 'Ulang materi + Remedial + retest',
+        color: 'text-yellow-700 bg-yellow-100',
+        passed: false,
+      };
+    case 'Very Low':
+      return {
+        label: 'Sangat Rendah',
+        action: 'Ulang intensif',
+        color: 'text-red-700 bg-red-100',
+        passed: false,
+      };
+  }
 }
 
 

@@ -3,12 +3,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
-import { GameCard, GameBadge, GameButton } from '../../components/GameUI';
+import { GameCard, GameBadge, GameButton, LoadingSpinner, LoadingOverlay } from '../../components/GameUI';
 import {
   weightedStageOrder,
   type WeightedStageId,
   scoreToCategory,
   weightedAssessment,
+  weightedIntroSlides,
 } from '../../lib/stageContent';
 
 type FirestoreTimestamp = { _seconds?: number; _nanoseconds?: number; seconds?: number; nanoseconds?: number };
@@ -173,6 +174,7 @@ export default function ProfilePage() {
   const [studentSummaries, setStudentSummaries] = useState<StudentSummary[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [studentsError, setStudentsError] = useState<string | null>(null);
+  const [logoutLoading, setLogoutLoading] = useState(false);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -218,7 +220,9 @@ export default function ProfilePage() {
 
         if (quizRes.ok) {
           const quizData = (await quizRes.json()) as QuizResponse;
-          if (active) setPretest(quizData.results?.[0] ?? null);
+          // Ambil pretest (isPosttest === false atau undefined), bukan posttest
+          const pretestResult = quizData.results?.find((r) => !(r as { isPosttest?: boolean }).isPosttest) ?? null;
+          if (active) setPretest(pretestResult);
         }
 
         if (stageRes.ok) {
@@ -287,7 +291,8 @@ export default function ProfilePage() {
                   ? Math.round(postPercents.reduce((acc, val) => acc + val, 0) / postPercents.length)
                   : 0;
 
-              const preDoc = quizData.results?.[0];
+              // Ambil pretest (isPosttest === false atau undefined), bukan posttest
+              const preDoc = quizData.results?.find((r) => !(r as { isPosttest?: boolean }).isPosttest) ?? null;
               const scores = preDoc?.scores ?? {};
               const prePercentRaw = weightedStageOrder.map((stage) => {
                 const max = 30;
@@ -530,28 +535,49 @@ export default function ProfilePage() {
     return statuses;
   }, [userDoc?.role, user, userDoc?.createdAt, pretest, stagePassed, stageLatest, evaluationMap, diariesByStage]);
 
+  const handleLogout = async () => {
+    if (!window.confirm('Apakah Anda yakin ingin logout?')) {
+      return;
+    }
+    
+    setLogoutLoading(true);
+    try {
+      await logout();
+      // Tunggu sebentar untuk menampilkan loading dan animasi
+      await new Promise(resolve => setTimeout(resolve, 800));
+      // Redirect ke login setelah logout berhasil
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      alert('Terjadi kesalahan saat logout');
+      setLogoutLoading(false);
+    }
+  };
+
+  const isTeacher = userDoc?.role === 'guru';
+  
   const profileNav = (
     <nav className="flex flex-wrap gap-2 justify-end">
       {[
         { label: 'Home', href: '/' },
-        { label: 'Journey', href: '/journey' },
-        { label: 'Hasil', href: '/results' },
+        ...(isTeacher ? [] : [{ label: 'Journey', href: '/journey' }]), // Hide Journey for teachers
+        ...(isTeacher ? [] : [{ label: 'Hasil', href: '/results' }]), // Hide Hasil for teachers
         { label: 'Tentang', href: '/tentang' },
-        { label: 'Profil', href: '/profile' },
+        ...(isTeacher ? [] : [{ label: 'Profil', href: '/profile' }]), // Hide Profil for teachers (they have menu in navbar)
       ].map((item) => (
-        <GameButton key={item.href} onClick={() => router.push(item.href)} className="from-green-500 to-emerald-600 text-xs px-4 py-2">
+        <GameButton key={item.href} onClick={() => router.push(item.href)} className="from-green-500 to-emerald-600 text-[10px] sm:text-xs px-2 py-1 sm:px-4 sm:py-2">
           {item.label}
         </GameButton>
       ))}
-      <GameButton onClick={logout} className="from-red-500 to-red-600 text-xs px-4 py-2">
-        Logout
+      <GameButton onClick={handleLogout} disabled={logoutLoading} className="from-red-500 to-red-600 text-[10px] sm:text-xs px-2 py-1 sm:px-4 sm:py-2">
+        {logoutLoading ? 'Logging out...' : 'Logout'}
       </GameButton>
     </nav>
   );
 
   if (!user) {
     return (
-      <div
+      <div 
         className="min-h-screen flex items-center justify-center"
         style={{
           backgroundImage: 'url(/Background_Front.png)',
@@ -560,7 +586,7 @@ export default function ProfilePage() {
         }}
       >
         <div className="bg-white/90 rounded-2xl shadow-2xl px-8 py-12 max-w-md w-full text-center">
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">Akses Diperlukan</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">Akses Diperlukan</h2>
           <p className="text-gray-600 mb-6">
             Silakan login untuk melihat profil dan aktivitas Anda.
           </p>
@@ -572,24 +598,39 @@ export default function ProfilePage() {
     );
   }
 
-  const isTeacher = userDoc?.role === 'guru';
-
+  if (profileLoading) {
   return (
-    <div
-      className="min-h-screen py-10 px-4"
+    <div 
+        className="min-h-screen py-10 px-4 flex items-center justify-center"
       style={{
         backgroundImage: 'url(/Background_Front.png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-      }}
-    >
-      <div className="max-w-7xl mx-auto space-y-6">
+        }}
+      >
+        <LoadingSpinner size="lg" text="Memuat profil..." fullScreen={false} />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <LoadingOverlay isLoading={logoutLoading} text="Memproses logout..." />
+      <div
+        className="min-h-screen py-10 px-4"
+              style={{
+          backgroundImage: 'url(/Background_Front.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4 text-white">
           <div>
             <GameBadge className="bg-emerald-500/90 border-white">
               {isTeacher ? 'Dashboard Guru BK' : 'Profil Siswa'}
             </GameBadge>
-            <h1 className="text-4xl font-extrabold drop-shadow">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold drop-shadow">
               {userDoc?.username || user.displayName || user.email || 'Pengguna'}
             </h1>
             <p className="text-white/85 font-semibold">
@@ -630,8 +671,9 @@ export default function ProfilePage() {
             evaluationMap={evaluationMap}
           />
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -675,7 +717,7 @@ function StudentView({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <GameCard className="bg-white/90 border-4 border-white/70 space-y-4 text-gray-800">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-extrabold">Biodata Siswa</h2>
+            <h2 className="text-xl sm:text-2xl font-extrabold">Biodata Siswa</h2>
             <GameBadge className="bg-blue-500/80 border-white">Identitas</GameBadge>
           </div>
 
@@ -695,7 +737,7 @@ function StudentView({
 
         <GameCard className="bg-white/90 border-4 border-white/70 space-y-4 text-gray-800">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-extrabold">Pantau Aktivitas</h2>
+            <h2 className="text-xl sm:text-2xl font-extrabold">Pantau Aktivitas</h2>
             <GameBadge className="bg-emerald-500/80 border-white">Progres</GameBadge>
           </div>
 
@@ -725,7 +767,7 @@ function StudentView({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <GameCard className="bg-white/90 border-4 border-white/70 space-y-4 text-gray-800">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-extrabold">Status Stage Adaptabilitas</h2>
+            <h2 className="text-xl sm:text-2xl font-extrabold">Status Stage Adaptabilitas</h2>
             <GameBadge className="bg-purple-500/80 border-white">Journey</GameBadge>
           </div>
 
@@ -749,7 +791,7 @@ function StudentView({
                   </div>
                   <div className="flex items-center justify-between text-sm font-semibold">
                     <span>{stagePassed[stage] ? 'Lulus ✅' : 'Belum Lulus ⚠️'}</span>
-                    <span>{percent}% • {scoreToCategory(percent)}</span>
+                    <span>{percent}% • {scoreToCategory(attempt?.score ?? 0, 240)}</span>
                   </div>
                   <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div
@@ -774,21 +816,21 @@ function StudentView({
 
         <GameCard className="bg-white/90 border-4 border-white/70 space-y-4 text-gray-800">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-extrabold">Refleksi & Evaluasi</h2>
+            <h2 className="text-xl sm:text-2xl font-extrabold">Refleksi & Evaluasi</h2>
             <GameBadge className="bg-orange-500/80 border-white">Refleksi</GameBadge>
-          </div>
+            </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <SummaryStat
               label="Skor CAAS I"
               value={prePercent !== undefined ? `${prePercent}%` : '-'}
-              sub={prePercent !== undefined ? scoreToCategory(prePercent) : 'Belum tersedia'}
+              sub={prePercent !== undefined ? scoreToCategory(Math.round((prePercent / 100) * 240), 240) : 'Belum tersedia'}
               accent="bg-blue-500/80"
             />
             <SummaryStat
               label="Rata-rata Posttest"
               value={postAverage !== undefined ? `${postAverage}%` : '-'}
-              sub={postAverage !== undefined ? scoreToCategory(postAverage) : 'Belum tersedia'}
+              sub={postAverage !== undefined ? scoreToCategory(Math.round((postAverage / 100) * 240), 240) : 'Belum tersedia'}
               accent="bg-emerald-500/80"
             />
             <SummaryStat
@@ -803,7 +845,7 @@ function StudentView({
               sub="Total refleksi tersimpan"
               accent="bg-orange-500/80"
             />
-          </div>
+              </div>
 
           <div className="bg-white/70 border border-white/60 rounded-2xl p-3 text-sm font-semibold text-gray-700 space-y-2">
             <p>
@@ -839,6 +881,8 @@ function TeacherView({
   studentsLoading: boolean;
   studentsError: string | null;
 }) {
+  const [activeTab, setActiveTab] = useState<'biodata' | 'pantau' | 'data-siswa' | 'cms-intro' | 'cms-quiz'>('biodata');
+  
   const totalStudents = studentSummaries.length;
   const counts = TEACHER_STAGE_ORDER.reduce<Record<TeacherStageId, number>>((acc, stage) => {
     acc[stage] = studentSummaries.filter((summary) => summary.highestStage === stage).length;
@@ -852,93 +896,277 @@ function TeacherView({
     adapt: 0,
   });
 
+  // Warna hijau berbeda untuk setiap stage (dalam keluarga hijau)
+  const GREEN_STAGE_COLORS: Record<TeacherStageId, string> = {
+    start: 'bg-emerald-200',      // Hijau muda
+    concern: 'bg-emerald-300',     // Hijau agak muda
+    control: 'bg-emerald-400',     // Hijau sedang
+    curiosity: 'bg-emerald-500',   // Hijau standar
+    confidence: 'bg-emerald-600',   // Hijau agak gelap
+    adapt: 'bg-emerald-700',       // Hijau gelap
+  };
+
+  const GREEN_STAGE_BORDER: Record<TeacherStageId, string> = {
+    start: 'border-emerald-300',
+    concern: 'border-emerald-400',
+    control: 'border-emerald-500',
+    curiosity: 'border-emerald-600',
+    confidence: 'border-emerald-700',
+    adapt: 'border-emerald-800',
+  };
+
+  const menuTabs = [
+    { id: 'biodata' as const, label: 'Biodata Guru', icon: '👤' },
+    { id: 'pantau' as const, label: 'Pantau Aktifitas', icon: '📊' },
+    { id: 'data-siswa' as const, label: 'Tampilan Data Siswa', icon: '👥' },
+    { id: 'cms-intro' as const, label: 'CMS Intro', icon: '📝' },
+    { id: 'cms-quiz' as const, label: 'CMS Quiz', icon: '✏️' },
+  ];
+
   return (
     <>
-      <GameCard className="bg-white/90 border-4 border-white/70 space-y-4 text-gray-800">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-extrabold">Profil Guru BK / Konselor</h2>
-          <GameBadge className="bg-indigo-500/80 border-white">Identitas</GameBadge>
-        </div>
+      {/* Menu Navigation Tabs */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        {menuTabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+              activeTab === tab.id
+                ? 'bg-emerald-500 text-white shadow-lg scale-105'
+                : 'bg-white/80 text-gray-700 hover:bg-white/90'
+            }`}
+          >
+            <span className="mr-2">{tab.icon}</span>
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm font-semibold">
-          <Field label="Nama Lengkap" value={userDoc?.username} />
-          <Field label="Email" value={userDoc?.email} />
-          <Field label="Peran" value="Guru BK / Konselor" />
-          <Field label="No. WA" value={userDoc?.phone} />
-          <Field label="Instansi" value={userDoc?.namaSekolah} span />
-          <Field label="Alamat" value={userDoc?.alamat} span />
-        </div>
-      </GameCard>
-
-      <GameCard className="bg-white/90 border-4 border-white/70 space-y-4 text-gray-800">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-extrabold">Statistik Partisipasi Siswa</h2>
-          <GameBadge className="bg-emerald-500/80 border-white">Monitoring</GameBadge>
-        </div>
-
-        {studentsLoading ? (
-          <div className="text-center font-semibold text-gray-600">Memuat data siswa...</div>
-        ) : studentsError ? (
-          <div className="text-center font-semibold text-red-600">{studentsError}</div>
-        ) : totalStudents === 0 ? (
-          <div className="text-center font-semibold text-gray-600">
-            Belum ada siswa yang terdaftar pada platform ini.
+      {/* Biodata Guru Tab */}
+      {activeTab === 'biodata' && (
+        <GameCard className="bg-white/90 border-4 border-white/70 space-y-4 text-gray-800">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-extrabold">Biodata Guru BK / Konselor</h2>
+            <GameBadge className="bg-indigo-500/80 border-white">Identitas</GameBadge>
           </div>
-        ) : (
-          <>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between text-sm font-semibold text-gray-600">
-                <span>Total Siswa</span>
-                <span>{totalStudents} siswa</span>
-              </div>
-              <div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden flex">
-                {TEACHER_STAGE_ORDER.map((stage) => {
-                  const count = counts[stage];
-                  if (count === 0) return null;
-                  const width = (count / totalStudents) * 100;
-                  return (
-                    <div
-                      key={stage}
-                      className={`${STAGE_META[stage].color} transition-all`}
-                      style={{ width: `${width}%` }}
-                      title={`${STAGE_META[stage].label}: ${count} siswa`}
-                    />
-                  );
-                })}
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-xs font-semibold">
-                {TEACHER_STAGE_ORDER.map((stage) => (
-                  <div key={stage} className="flex items-center gap-2">
-                    <span className={`w-3 h-3 rounded-full ${STAGE_META[stage].color}`} />
-                    <span className="text-gray-600">
-                      {STAGE_META[stage].label}: {counts[stage]}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-      </GameCard>
 
-      <GameCard className="bg-white/90 border-4 border-white/70 space-y-4 text-gray-800">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-extrabold">Daftar Siswa</h2>
-          <GameBadge className="bg-blue-500/80 border-white">Pantau Aktivitas</GameBadge>
-        </div>
-
-        {studentsLoading ? (
-          <div className="text-center font-semibold text-gray-600">Memuat data siswa...</div>
-        ) : studentSummaries.length === 0 ? (
-          <div className="text-center font-semibold text-gray-600">
-            Belum ada data siswa yang tersedia.
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm font-semibold">
+            <Field label="Nama Lengkap" value={userDoc?.username} />
+            <Field label="Email" value={userDoc?.email} />
+            <Field label="Peran" value="Guru BK / Konselor" />
+            <Field label="No. WA" value={userDoc?.phone} />
+            <Field label="Instansi" value={userDoc?.namaSekolah} span />
+            <Field label="Alamat" value={userDoc?.alamat} span />
+            <Field label="Terdaftar Pada" value={formatDate(userDoc?.createdAt)} span />
           </div>
-        ) : (
-          <div className="space-y-3 max-h-[28rem] overflow-auto pr-2">
-            {studentSummaries.map((student) => (
+        </GameCard>
+      )}
+
+      {/* Pantau Aktifitas Tab */}
+      {activeTab === 'pantau' && (
+        <PantauAktifitasView
+          studentSummaries={studentSummaries}
+          studentsLoading={studentsLoading}
+          studentsError={studentsError}
+          greenStageColors={GREEN_STAGE_COLORS}
+          greenStageBorder={GREEN_STAGE_BORDER}
+        />
+      )}
+
+      {/* Tampilan Data Siswa Tab */}
+      {activeTab === 'data-siswa' && (
+        <DataSiswaView
+          studentSummaries={studentSummaries}
+          studentsLoading={studentsLoading}
+          studentsError={studentsError}
+        />
+      )}
+
+      {/* CMS Intro Tab */}
+      {activeTab === 'cms-intro' && (
+        <CMSIntroView />
+      )}
+
+      {/* CMS Quiz Tab */}
+      {activeTab === 'cms-quiz' && (
+        <CMSQuizView />
+      )}
+    </>
+  );
+}
+
+// Komponen Pantau Aktifitas
+function PantauAktifitasView({
+  studentSummaries,
+  studentsLoading,
+  studentsError,
+  greenStageColors,
+  greenStageBorder,
+}: {
+  studentSummaries: StudentSummary[];
+  studentsLoading: boolean;
+  studentsError: string | null;
+  greenStageColors: Record<TeacherStageId, string>;
+  greenStageBorder: Record<TeacherStageId, string>;
+}) {
+  const STAGE_LABELS: Record<TeacherStageId, string> = {
+    start: 'Start (Pretest)',
+    concern: 'Concern',
+    control: 'Control',
+    curiosity: 'Curiosity',
+    confidence: 'Confidence',
+    adapt: 'Adaptabilitas Karier (Posttest)',
+  };
+
+  // Group siswa berdasarkan stage mereka
+  const studentsByStage = TEACHER_STAGE_ORDER.reduce<Record<TeacherStageId, StudentSummary[]>>((acc, stage) => {
+    acc[stage] = studentSummaries.filter((student) => {
+      if (stage === 'start') return true; // Semua siswa di start
+      if (stage === 'adapt') return student.stageFlags.adapt;
+      return student.highestStage === stage || student.stageFlags[stage];
+    });
+    return acc;
+  }, {
+    start: [],
+    concern: [],
+    control: [],
+    curiosity: [],
+    confidence: [],
+    adapt: [],
+  });
+
+  return (
+    <GameCard className="bg-white/90 border-4 border-white/70 space-y-6 text-gray-800">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-extrabold">Pantau Aktifitas Siswa</h2>
+        <GameBadge className="bg-emerald-500/80 border-white">Monitoring Real-time</GameBadge>
+      </div>
+
+      {studentsLoading ? (
+        <div className="text-center font-semibold text-gray-600 py-8">Memuat data siswa...</div>
+      ) : studentsError ? (
+        <div className="text-center font-semibold text-red-600 py-8">{studentsError}</div>
+      ) : (
+        <div className="space-y-6">
+          {TEACHER_STAGE_ORDER.map((stage) => {
+            const students = studentsByStage[stage];
+            return (
               <div
-                key={student.id}
-                className="border-2 border-white/60 bg-white/70 rounded-2xl p-4 space-y-2"
+                key={stage}
+                className={`border-4 ${greenStageBorder[stage]} rounded-2xl p-4 ${greenStageColors[stage]} bg-opacity-20`}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-extrabold text-gray-800">{STAGE_LABELS[stage]}</h3>
+                  <GameBadge className={`${greenStageColors[stage]} text-white border-white`}>
+                    {students.length} Siswa
+                  </GameBadge>
+                </div>
+                
+                {students.length === 0 ? (
+                  <p className="text-sm font-semibold text-gray-600">Belum ada siswa di stage ini</p>
+                ) : (
+                  <div className="space-y-2">
+                    {students.map((student) => (
+                      <div
+                        key={student.id}
+                        className="bg-white/80 rounded-lg p-3 border-2 border-white flex items-center justify-between"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-emerald-200 text-emerald-700 font-bold flex items-center justify-center text-sm">
+                            {student.avatar}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-gray-800">{student.name}</p>
+                            <p className="text-xs text-gray-500">{student.email}</p>
+                          </div>
+                        </div>
+                        <div className={`h-2 w-32 rounded-full ${greenStageColors[stage]} border-2 ${greenStageBorder[stage]}`} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </GameCard>
+  );
+}
+
+// Komponen Tampilan Data Siswa
+function DataSiswaView({
+  studentSummaries,
+  studentsLoading,
+  studentsError,
+}: {
+  studentSummaries: StudentSummary[];
+  studentsLoading: boolean;
+  studentsError: string | null;
+}) {
+  const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
+  const [studentDetails, setStudentDetails] = useState<{ stages: Array<{ stage: string; score: number; passed: boolean; createdAt?: string | Date }>; quizzes: Array<{ isPosttest?: boolean; percent?: number; createdAt?: string | Date }>; diaries: Array<{ stage?: string; judul?: string; createdAt?: string | Date }>; evaluations: Array<{ type?: string; createdAt?: string | Date; answers?: number[] }> } | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+
+  const handleStudentClick = async (studentId: string) => {
+    if (selectedStudent === studentId) {
+      setSelectedStudent(null);
+      setStudentDetails(null);
+      return;
+    }
+
+    setSelectedStudent(studentId);
+    setLoadingDetails(true);
+    try {
+      // Fetch detail progress siswa
+      const [stageRes, quizRes, diaryRes, evalRes] = await Promise.all([
+        fetch(`/api/stage?userId=${encodeURIComponent(studentId)}`),
+        fetch(`/api/quiz?userId=${encodeURIComponent(studentId)}`),
+        fetch(`/api/diary?userId=${encodeURIComponent(studentId)}`),
+        fetch(`/api/evaluation?userId=${encodeURIComponent(studentId)}`),
+      ]);
+
+      const stageData = stageRes.ok ? await stageRes.json() : { attempts: [] };
+      const quizData = quizRes.ok ? await quizRes.json() : { results: [] };
+      const diaryData = diaryRes.ok ? await diaryRes.json() : { diaries: [] };
+      const evalData = evalRes.ok ? await evalRes.json() : { evaluations: [] };
+
+      setStudentDetails({
+        stages: stageData.attempts || [],
+        quizzes: quizData.results || [],
+        diaries: diaryData.diaries || [],
+        evaluations: evalData.evaluations || [],
+      });
+    } catch (error) {
+      console.error('Error fetching student details:', error);
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  return (
+    <GameCard className="bg-white/90 border-4 border-white/70 space-y-4 text-gray-800">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-extrabold">Tampilan Data Siswa</h2>
+        <GameBadge className="bg-blue-500/80 border-white">Daftar Siswa</GameBadge>
+      </div>
+
+      {studentsLoading ? (
+        <div className="text-center font-semibold text-gray-600 py-8">Memuat data siswa...</div>
+      ) : studentsError ? (
+        <div className="text-center font-semibold text-red-600 py-8">{studentsError}</div>
+      ) : studentSummaries.length === 0 ? (
+        <div className="text-center font-semibold text-gray-600 py-8">
+          Belum ada data siswa yang tersedia.
+        </div>
+      ) : (
+        <div className="space-y-3 max-h-[600px] overflow-auto pr-2">
+          {studentSummaries.map((student) => (
+            <div key={student.id} className="space-y-3">
+              <div
+                onClick={() => handleStudentClick(student.id)}
+                className="border-2 border-white/60 bg-white/70 rounded-2xl p-4 cursor-pointer hover:bg-white/90 transition-colors"
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -947,26 +1175,18 @@ function TeacherView({
                     </div>
                     <div>
                       <p className="text-sm font-bold text-gray-800">{student.name}</p>
-                      <p className="text-xs text-gray-500">
-                        {student.email || 'Email tidak tersedia'}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {student.school || 'Sekolah belum dicatat'}
-                      </p>
+                      <p className="text-xs text-gray-500">{student.email || 'Email tidak tersedia'}</p>
+                      <p className="text-xs text-gray-500">{student.school || 'Sekolah belum dicatat'}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-xs font-semibold text-gray-500">Tahap Saat Ini</p>
-                    <p className="text-sm font-bold text-emerald-600">
-                      {STAGE_META[student.highestStage].label}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Pembaruan: {formatDate(student.lastUpdated)}
-                    </p>
+                    <p className="text-sm font-bold text-emerald-600">{STAGE_META[student.highestStage].label}</p>
+                    <p className="text-xs text-gray-500">Pembaruan: {formatDate(student.lastUpdated)}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 mt-3">
                   {TEACHER_STAGE_ORDER.map((stage) => (
                     <div
                       key={stage}
@@ -977,28 +1197,450 @@ function TeacherView({
                   ))}
                 </div>
 
-                {(() => {
-                  const completedStages = TEACHER_STAGE_ORDER.filter(
-                    (stage) => student.stageFlags[stage],
-                  ).length;
-                  return (
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-semibold text-gray-600">
-                      <span>Pretest: {student.prePercent}%</span>
-                      <span>Posttest: {student.postPercent}%</span>
-                      <span>Stage Selesai: {completedStages}/{TEACHER_STAGE_ORDER.length}</span>
-                      <span>
-                        Adaptabilitas:{' '}
-                        {student.stageFlags.adapt ? 'Refleksi tersimpan' : 'Belum ada catatan'}
-                      </span>
-                    </div>
-                  );
-                })()}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-semibold text-gray-600 mt-3">
+                  <span>Pretest: {student.prePercent}%</span>
+                  <span>Posttest: {student.postPercent}%</span>
+                  <span>
+                    Stage Selesai: {TEACHER_STAGE_ORDER.filter((s) => student.stageFlags[s]).length}/
+                    {TEACHER_STAGE_ORDER.length}
+                  </span>
+                  <span>
+                    Adaptabilitas: {student.stageFlags.adapt ? 'Refleksi tersimpan' : 'Belum ada catatan'}
+                  </span>
+                </div>
               </div>
-            ))}
-          </div>
-        )}
-      </GameCard>
-    </>
+
+              {/* Detail Progress Siswa */}
+              {selectedStudent === student.id && (
+                <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 space-y-4">
+                  {loadingDetails ? (
+                    <div className="text-center font-semibold text-gray-600">Memuat detail progress...</div>
+                  ) : studentDetails ? (
+                    <div className="space-y-4">
+                      <h4 className="font-bold text-lg text-gray-800">Detail Progress</h4>
+                      
+                      <div>
+                        <h5 className="font-semibold text-gray-700 mb-2">Stage Attempts ({studentDetails.stages.length})</h5>
+                        <div className="space-y-2 max-h-40 overflow-auto">
+                          {studentDetails.stages.slice(0, 5).map((attempt: { stage: string; score: number; passed: boolean; createdAt?: string | Date }, idx: number) => (
+                            <div key={idx} className="bg-white rounded p-2 text-xs">
+                              <span className="font-semibold">{attempt.stage}:</span> Score {attempt.score}, 
+                              {attempt.passed ? ' Lulus ✅' : ' Belum Lulus ⚠️'} - {formatDate(attempt.createdAt)}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <h5 className="font-semibold text-gray-700 mb-2">Quiz Results ({studentDetails.quizzes.length})</h5>
+                        <div className="space-y-2 max-h-40 overflow-auto">
+                          {studentDetails.quizzes.slice(0, 5).map((quiz: { isPosttest?: boolean; percent?: number; createdAt?: string | Date }, idx: number) => (
+                            <div key={idx} className="bg-white rounded p-2 text-xs">
+                              {quiz.isPosttest ? 'Posttest' : 'Pretest'}: {quiz.percent}% - {formatDate(quiz.createdAt)}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <h5 className="font-semibold text-gray-700 mb-2">Diaries ({studentDetails.diaries.length})</h5>
+                        <div className="space-y-2 max-h-40 overflow-auto">
+                          {studentDetails.diaries.slice(0, 5).map((diary: { stage?: string; judul?: string; createdAt?: string | Date }, idx: number) => (
+                            <div key={idx} className="bg-white rounded p-2 text-xs">
+                              {diary.stage || 'Unknown'}: {diary.judul || 'No title'} - {formatDate(diary.createdAt)}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center font-semibold text-gray-600">Tidak ada data detail</div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </GameCard>
+  );
+}
+
+// Komponen CMS Intro
+function CMSIntroView() {
+  const [selectedStage, setSelectedStage] = useState<WeightedStageId>('concern');
+  const [slides, setSlides] = useState<Array<{ key: string; title: string; paragraphs: string[] }>>([]);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadIntroSlides();
+  }, [selectedStage]);
+
+  const loadIntroSlides = async () => {
+    setLoading(true);
+    setMessage(null);
+    try {
+      // Load from CMS API first, fallback to default
+      const res = await fetch(`/api/cms/intro?stage=${selectedStage}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.data && data.data.length > 0) {
+          setSlides(data.data);
+        } else {
+          // Fallback to default from stageContent
+          const defaultSlides = weightedIntroSlides[selectedStage];
+          setSlides(defaultSlides.map(s => ({ ...s })));
+        }
+      } else {
+        // Fallback to default
+        const defaultSlides = weightedIntroSlides[selectedStage];
+        setSlides(defaultSlides.map(s => ({ ...s })));
+      }
+    } catch (error) {
+      console.error('Error loading intro slides:', error);
+      // Fallback to default
+      const defaultSlides = weightedIntroSlides[selectedStage];
+      setSlides(defaultSlides.map(s => ({ ...s })));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setMessage(null);
+    try {
+      const res = await fetch('/api/cms/intro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stage: selectedStage, slides }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setMessage('Intro slides berhasil disimpan!');
+        setTimeout(() => setMessage(null), 3000);
+      } else {
+        setMessage(`Error: ${data.error || 'Gagal menyimpan'}`);
+      }
+    } catch (error) {
+      console.error('Error saving intro slides:', error);
+      setMessage('Terjadi kesalahan saat menyimpan');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateSlide = (index: number, field: 'title' | 'paragraphs', value: string | string[]) => {
+    const newSlides = [...slides];
+    newSlides[index] = { ...newSlides[index], [field]: value };
+    setSlides(newSlides);
+  };
+
+  const addSlide = () => {
+    setSlides([...slides, { key: `new-${Date.now()}`, title: '', paragraphs: [''] }]);
+  };
+
+  const removeSlide = (index: number) => {
+    if (confirm('Hapus slide ini?')) {
+      setSlides(slides.filter((_, i) => i !== index));
+    }
+  };
+
+  return (
+    <GameCard className="bg-white/90 border-4 border-white/70 space-y-4 text-gray-800">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-extrabold">CMS Edit Intro</h2>
+        <GameBadge className="bg-purple-500/80 border-white">Content Management</GameBadge>
+      </div>
+
+      <div className="flex gap-2 mb-4">
+        {weightedStageOrder.map((stage) => (
+          <button
+            key={stage}
+            onClick={() => setSelectedStage(stage)}
+            className={`px-4 py-2 rounded-lg font-semibold ${
+              selectedStage === stage
+                ? 'bg-emerald-500 text-white'
+                : 'bg-gray-200 text-gray-700'
+            }`}
+          >
+            {stage.charAt(0).toUpperCase() + stage.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {message && (
+        <div className={`p-3 rounded-lg ${message.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+          {message}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="text-center py-8">Memuat data...</div>
+      ) : (
+        <div className="space-y-4 max-h-[600px] overflow-auto pr-2">
+          {slides.map((slide, slideIndex) => (
+            <div key={slideIndex} className="border-2 border-gray-300 rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-lg">Slide {slideIndex + 1}</h3>
+                <button
+                  onClick={() => removeSlide(slideIndex)}
+                  className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                >
+                  Hapus
+                </button>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold mb-1">Judul</label>
+                <input
+                  type="text"
+                  value={slide.title || ''}
+                  onChange={(e) => updateSlide(slideIndex, 'title', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-1">Paragraf (satu per baris)</label>
+                <textarea
+                  value={Array.isArray(slide.paragraphs) ? slide.paragraphs.join('\n') : slide.paragraphs || ''}
+                  onChange={(e) => {
+                    const paragraphs = e.target.value.split('\n').filter(p => p.trim());
+                    updateSlide(slideIndex, 'paragraphs', paragraphs);
+                  }}
+                  rows={6}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                />
+              </div>
+            </div>
+          ))}
+
+          <button
+            onClick={addSlide}
+            className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          >
+            + Tambah Slide
+          </button>
+        </div>
+      )}
+
+      <div className="flex gap-3 pt-4">
+        <GameButton onClick={handleSave} disabled={saving} className="from-green-500 to-emerald-600">
+          {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
+        </GameButton>
+        <GameButton onClick={loadIntroSlides} className="from-gray-400 to-gray-600">
+          Reset
+        </GameButton>
+      </div>
+    </GameCard>
+  );
+}
+
+// Komponen CMS Quiz
+function CMSQuizView() {
+  const [selectedStage, setSelectedStage] = useState<WeightedStageId>('concern');
+  const [questions, setQuestions] = useState<Array<{ q: string; options: Array<{ text: string; score: number }> }>>([]);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadQuizQuestions();
+  }, [selectedStage]);
+
+  const loadQuizQuestions = async () => {
+    setLoading(true);
+    setMessage(null);
+    try {
+      // Load from CMS API first, fallback to default
+      const res = await fetch(`/api/cms/quiz?stage=${selectedStage}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.data && data.data.length > 0) {
+          setQuestions(data.data);
+        } else {
+          // Fallback to default from stageContent
+          const defaultQuestions = weightedAssessment[selectedStage];
+          setQuestions(defaultQuestions.map(q => ({ ...q })));
+        }
+      } else {
+        // Fallback to default
+        const defaultQuestions = weightedAssessment[selectedStage];
+        setQuestions(defaultQuestions.map(q => ({ ...q })));
+      }
+    } catch (error) {
+      console.error('Error loading quiz questions:', error);
+      // Fallback to default
+      const defaultQuestions = weightedAssessment[selectedStage];
+      setQuestions(defaultQuestions.map(q => ({ ...q })));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setMessage(null);
+    try {
+      const res = await fetch('/api/cms/quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stage: selectedStage, questions }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setMessage('Quiz questions berhasil disimpan!');
+        setTimeout(() => setMessage(null), 3000);
+      } else {
+        setMessage(`Error: ${data.error || 'Gagal menyimpan'}`);
+      }
+    } catch (error) {
+      console.error('Error saving quiz questions:', error);
+      setMessage('Terjadi kesalahan saat menyimpan');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateQuestion = (qIndex: number, field: 'q' | 'options', value: string | Array<{ text: string; score: number }>) => {
+    const newQuestions = [...questions];
+    newQuestions[qIndex] = { ...newQuestions[qIndex], [field]: value };
+    setQuestions(newQuestions);
+  };
+
+  const updateOption = (qIndex: number, optIndex: number, field: 'text' | 'score', value: string | number) => {
+    const newQuestions = [...questions];
+    const newOptions = [...newQuestions[qIndex].options];
+    newOptions[optIndex] = { ...newOptions[optIndex], [field]: value };
+    newQuestions[qIndex] = { ...newQuestions[qIndex], options: newOptions };
+    setQuestions(newQuestions);
+  };
+
+  const addQuestion = () => {
+    setQuestions([
+      ...questions,
+      {
+        q: '',
+        options: [
+          { text: '', score: 10 },
+          { text: '', score: 20 },
+          { text: '', score: 30 },
+          { text: '', score: 40 },
+        ],
+      },
+    ]);
+  };
+
+  const removeQuestion = (index: number) => {
+    if (confirm('Hapus pertanyaan ini?')) {
+      setQuestions(questions.filter((_, i) => i !== index));
+    }
+  };
+
+  return (
+    <GameCard className="bg-white/90 border-4 border-white/70 space-y-4 text-gray-800">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-extrabold">CMS Edit Quiz</h2>
+        <GameBadge className="bg-orange-500/80 border-white">Content Management</GameBadge>
+      </div>
+
+      <div className="flex gap-2 mb-4">
+        {weightedStageOrder.map((stage) => (
+          <button
+            key={stage}
+            onClick={() => setSelectedStage(stage)}
+            className={`px-4 py-2 rounded-lg font-semibold ${
+              selectedStage === stage
+                ? 'bg-emerald-500 text-white'
+                : 'bg-gray-200 text-gray-700'
+            }`}
+          >
+            {stage.charAt(0).toUpperCase() + stage.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {message && (
+        <div className={`p-3 rounded-lg ${message.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+          {message}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="text-center py-8">Memuat data...</div>
+      ) : (
+        <div className="space-y-4 max-h-[600px] overflow-auto pr-2">
+          {questions.map((question, qIndex) => (
+            <div key={qIndex} className="border-2 border-gray-300 rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-lg">Pertanyaan {qIndex + 1}</h3>
+                <button
+                  onClick={() => removeQuestion(qIndex)}
+                  className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                >
+                  Hapus
+                </button>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-1">Pertanyaan</label>
+                <input
+                  type="text"
+                  value={question.q || ''}
+                  onChange={(e) => updateQuestion(qIndex, 'q', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">Pilihan Jawaban</label>
+                {question.options?.map((option: { text: string; score: number }, optIndex: number) => (
+                  <div key={optIndex} className="mb-2 flex gap-2">
+                    <input
+                      type="text"
+                      value={option.text || ''}
+                      onChange={(e) => updateOption(qIndex, optIndex, 'text', e.target.value)}
+                      placeholder={`Jawaban ${String.fromCharCode(65 + optIndex)}`}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded"
+                    />
+                    <input
+                      type="number"
+                      value={option.score || 0}
+                      onChange={(e) => updateOption(qIndex, optIndex, 'score', parseInt(e.target.value) || 0)}
+                      placeholder="Score"
+                      className="w-20 px-3 py-2 border border-gray-300 rounded"
+                      min="0"
+                      max="40"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          <button
+            onClick={addQuestion}
+            className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          >
+            + Tambah Pertanyaan
+          </button>
+        </div>
+      )}
+
+      <div className="flex gap-3 pt-4">
+        <GameButton onClick={handleSave} disabled={saving} className="from-green-500 to-emerald-600">
+          {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
+        </GameButton>
+        <GameButton onClick={loadQuizQuestions} className="from-gray-400 to-gray-600">
+          Reset
+        </GameButton>
+      </div>
+    </GameCard>
   );
 }
 

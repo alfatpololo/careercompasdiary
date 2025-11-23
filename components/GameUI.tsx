@@ -94,5 +94,66 @@ export function GameBadge({ children, className = "" }: { children: React.ReactN
   );
 }
 
+export function LoadingSpinner({ 
+  size = "md", 
+  text = "Memuat...", 
+  fullScreen = false,
+  className = "" 
+}: { 
+  size?: "sm" | "md" | "lg";
+  text?: string;
+  fullScreen?: boolean;
+  className?: string;
+}) {
+  const sizeClasses = {
+    sm: "w-6 h-6",
+    md: "w-12 h-12",
+    lg: "w-16 h-16"
+  };
+
+  const spinner = (
+    <div className={`flex flex-col items-center justify-center gap-3 ${className}`}>
+      <div className={`${sizeClasses[size]} relative`}>
+        <div className="absolute inset-0 border-4 border-white/30 rounded-full"></div>
+        <div className="absolute inset-0 border-4 border-transparent border-t-white rounded-full animate-spin"></div>
+      </div>
+      {text && (
+        <p className="text-white font-semibold text-sm md:text-base drop-shadow">{text}</p>
+      )}
+    </div>
+  );
+
+  if (fullScreen) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="bg-gradient-to-br from-sky-400 to-blue-600 rounded-3xl p-8 border-4 border-white/60 shadow-2xl">
+          {spinner}
+        </div>
+      </div>
+    );
+  }
+
+  return spinner;
+}
+
+export function LoadingOverlay({ 
+  isLoading, 
+  text = "Memproses..." 
+}: { 
+  isLoading: boolean;
+  text?: string;
+}) {
+  if (!isLoading) return null;
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-gradient-to-br from-sky-400 to-blue-600 rounded-3xl p-8 border-4 border-white/60 shadow-2xl">
+        <LoadingSpinner size="lg" text={text} />
+      </div>
+    </div>
+  );
+}
+
+
 
 

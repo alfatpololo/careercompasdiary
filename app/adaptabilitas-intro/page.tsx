@@ -1,83 +1,132 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import { TextToSpeech } from '../../components/TextToSpeech';
-import { GameButton, GameCard, GameBadge } from '../../components/GameUI';
+import { GameButton, GameCard, GameBadge, LoadingSpinner } from '../../components/GameUI';
 
-const contentSections = [
+const defaultContentSections = [
   {
     id: 'introduction',
-    title: 'Pengenalan Adaptabilitas Karier',
-    content: `Adaptabilitas Karier adalah Kemampuan untuk menyesuaikan diri terhadap perubahan di suatu lingkungan dan perkembangan karier disebut adaptabilitas karier. Konsep ini menjadi sangat relevan dalam lingkungan kerja yang selalu berubah, di mana teknologi serta dinamika pasar mempengaruhi cara orang menjalani pekerjaan dan karier mereka. Menurut Savickas (2013), terdapat empat komponen utama dari adaptabilitas karier: kontrol, kepercayaan, keterampilan, dan komitmen. Individu yang memiliki tingkat adaptabilitas yang tinggi biasanya lebih siap untuk menghadapi tantangan dan memanfaatkan peluang yang ada.`
-  },
-  {
-    id: 'components',
-    title: 'Komponen Utama yang Dapat Diadaptasi untuk Siswa',
-    content: `Concern (Kepedulian): Membantu siswa menyadari pentingnya merencanakan masa depan karier mereka, misalnya melalui tugas refleksi: "Bagaimana gambaran saya dalam 5–10 tahun ke depan?"
-Control (Pengendalian): Mendorong siswa merasakan agen terhadap pilihan karier. misalnya, menentukan jurusan di SMA atau program ekstrakurikuler yang relevan.
-Curiosity (Keingintahuan): Mengajak siswa mengeksplorasi berbagai profesi melalui kunjungan industri, wawancara alumni, atau simulasi peran (role play).
-Confidence (Keyakinan Diri): Membangun rasa percaya diri siswa melalui pengalaman kecil. misalnya tugas presentasi terkait prospek karier atau keterampilan yang mereka miliki.`
+    title: 'Adaptabilitas Karier',
+    content: `Adaptabilitas karier adalah kemampuan seseorang untuk merencanakan, mengatur, mengeksplorasi, dan mewujudkan transisi karier serta menghadapi perubahan dunia kerja. Dalam terminologi Savickas, adaptabilitas karier terdiri dari empat sumber daya psikologis utama :
+
+Concern (Kepedulian/Perencanaan masa depan) yaitu kesiapan dan perhatian terhadap masa depan karier dengan memikirkan arah, mempersiapkan tujuan karier.
+Control (Kendali/Keputusan diri) yaitu kemampuan mengambil tanggung jawab, membuat keputusan, dan mengelola tindakan untuk mencapai tujuan karier.
+Curiosity (Rasa ingin tahu/Eksplorasi) yaitu dorongan mencari informasi, mencoba pekerjaan atau skill baru, dan mengeksplorasi jalur karier.
+Confidence (Kepercayaan diri/Evaluasi kemampuan) yaitu keyakinan pada kemampuan diri untuk mengambil tindakan, menyelesaikan tugas, dan mengatasi hambatan.
+
+Keempat sumber daya psikologis tersebut menunjukkan bahwa adaptabilitas karier adalah kemampuan merencanakan, mengendalikan, mengeksplorasi, dan percaya diri ketika menghadapi perubahan kerja.`
   },
   {
     id: 'purpose',
-    title: 'Tujuan Pengembangan Adaptabilitas Karier',
-    content: `Tujuan pengembangan Adaptabilitas Karier kapasitas karier memiliki banyak variasi dan melibatkan berbagai elemen yang mendukung kesuksesan seseorang di dunia pekerjaan. Salah satu tujuan utamanya adalah untuk mempersiapkan individu menghadapi perubahan yang berlangsung cepat dalam lingkungan kerja. Dengan tingkat fleksibilitas yang baik, individu dapat lebih gampang menyesuaikan diri dengan tuntutan pekerjaan yang baru, seperti inovasi teknologi dan pergeseran pasar. Tujuan dari adaptabilitas karier juga mencakup pembentukan jaringan profesional yang solid. Individu yang mampu beradaptasi dengan baik lebih mungkin membangun relasi dengan orang lain dalam industri mereka, yang bisa membuka peluang baru. Dengan demikian, tujuan dari pengembangan adaptabilitas karier tidak hanya terfokus pada aspek individu, tetapi juga mencakup interaksi sosial dan profesional yang dapat meningkatkan peluang dalam karier.`
+    title: 'Tujuan Adaptabilitas Karier',
+    content: `Tujuan utama dari adaptabilitas karier ini adalah untuk menumbuhkan kesiapan siswa SMK agar mampu menyesuaikan diri dengan tuntutan dunia kerja atau bahkan berwirausaha di era modern yang serba cepat ini. Terdapat dua tujuan diantaranya adalah. 
+
+1. Tujuan umum
+Menumbuhkan kesiapan siswa SMK agar mampu menyesuaikan diri, merencanakan, dan mengambil langkah konkrit menuju dunia kerja di era modern.
+
+2. Tujuan khusus
+• Siswa dapat memahami dan menjelaskan 4 dimensi adaptabilitas karier (concern, control, curiosity, confidence).
+• Siswa mampu membuat rencana karier sederhana (jangka panjang atau jangka pendek) yang realistis dan terukur.
+• Siswa menunjukkan minimal 3 tindakan eksplorasi profesi (kunjungan industri, magang mini, wawancara profesional).
+• Siswa meningkatkan skor reflektif/asesmen adaptabilitas (pre–post) melalui kegiatan terstruktur.
+• Siswa mempraktikkan teknik pengambilan keputusan saat studi kasus transisi kerja (role-play).`
   },
   {
     id: 'characteristics',
     title: 'Karakteristik Adaptabilitas Karier',
-    content: `Berikut poin-poin inti yang harus ada dalam bagian Karakteristik Individu dalam Adaptabilitas Karier:
-Kemampuan Beradaptasi: Fleksibilitas dalam menghadapi perubahan dan tantangan baru, Penggunaan berbagai strategi untuk menyelesaikan masalah dalam konteks yang berbeda
-Keterbukaan terhadap Pengalaman Baru (Openness): Kesediaan menjelajahi hal-hal baru dan belajar dari situasi baru, Keterbukaan ide dan perspektif yang mendukung penyesuaian diri
-Sikap Positif: Optimisme dalam menghadapi ketidakpastian dan stres, Keyakinan diri bahwa tantangan dapat diatasi
-Ketahanan (Resilience): Kemampuan pulih (bounce back) setelah kegagalan atau rintangan, Belajar dan tumbuh dari pengalaman sulit
-Keterampilan Interpersonal: Komunikasi efektif dengan berbagai pihak, Kemampuan membangun dan memelihara jaringan profesional
-Pengendalian Diri (Self-Control): Manajemen emosi saat menghadapi situasi menekan, Disiplin dalam merencanakan dan mengambil langkah karier
-Kesadaran Diri (Self-Awareness): Pemahaman atas kekuatan, nilai, dan minat pribadi, Refleksi rutin untuk mengevaluasi tujuan dan kemajuan
-Proaktivitas: Inisiatif dalam mencari peluang belajar dan pengembangan, Keberanian mengambil keputusan dan bertindak sebelum keadaan mendesak
-Semua poin di atas saling melengkapi dan memengaruhi satu sama lain dalam membentuk adaptabilitas karier yang kokoh.`
+    content: `Siswa yang memiliki adaptabilitas karier tinggi umumnya menunjukkan perilaku atau karakteristik berikut :
+
+1. Memikirkan masa depan dan membuat target (perencanaan).
+2. Bertanggung jawab atas pilihan kariernya (inisiatif dan kontrol).
+3. Aktif mencoba hal baru dan bertanya tentang profesi (eksploratif).
+4. Yakin pada kemampuan diri ketika menghadapi tantangan (resiliensi dan self-efficacy).
+5. Fleksibel terhadap perubahan tugas/teknologi dan mau belajar keterampilan baru.
+6. Mencari umpan balik dan memperbaiki rencana setelah kegagalan.`
   },
   {
     id: 'factors',
     title: 'Faktor-faktor Adaptabilitas Karier',
-    content: `Berikut poin-poin inti yang harus ada dalam Faktor‐faktor yang Mempengaruhi Adaptabilitas Karier:
-Faktor Internal
-Kepribadian (Personality Traits): keterbukaan (openness), fleksibilitas, dan kecenderungan terhadap inovasi
-Motivasi dan Inisiatif: dorongan untuk mencari peluang, menetapkan tujuan, dan proaktif menghadapi tantangan (Xie et al., 2016)
-Keterampilan (Skills & Competencies): hard skills (teknis) dan soft skills (komunikasi, problem solving) yang relevan dengan tuntutan pekerjaan
-Sikap dan Keyakinan Diri: optimisme, self-efficacy, serta rasa kontrol atas proses karier sendiri
-Faktor Eksternal
-Budaya dan Struktur Organisasi: lingkungan kerja yang inovatif, fleksibel, dan mendukung pembelajaran (Savickas, 2002)
-Kesempatan Pengembangan: akses ke pelatihan, workshop, mentoring, dan proyek lintas fungsi (Wang & Li, 2024)
-Dukungan Sosial: peran keluarga, teman, kolega, dan jaringan profesional dalam memberikan dorongan dan umpan balik (Rudolph et al., 2019)
-Kebijakan dan Sistem: kebijakan perusahaan (mis. work‐from‐home, job rotation), sistem reward, dan kesempatan promosi
-Interaksi Antarfaktor
-Bagaimana faktor internal (mis. motivasi tinggi) memanfaatkan kesempatan eksternal (mis. program pelatihan) untuk meningkatkan adaptabilitas
-Sinergi antara dukungan sosial dan kepercayaan diri dalam mempercepat proses penyesuaian diri di tempat kerja
-Dengan mencakup semua faktor di atas, intervensi bimbingan karier dapat dibuat lebih komprehensif dan terfokus untuk memperkuat adaptabilitas individu dalam berbagai konteks profesi.`
+    content: `1. Internal (individual)
+• Kepribadian (terbuka terhadap pengalaman baru, tanggung jawab).
+• Kompetensi teknis dan soft skills (komunikasi, problem solving).
+• Self-efficacy dan motivasi (percaya diri, memiliki semangat untuk maju).
+• Pengalaman sebelumnya (magang, proyek, part-time).
+
+2. Keluarga & Sosial
+• Dukungan orang tua, ekspektasi keluarga.
+• Jaringan sosial dan relasi profesional (mentor, alumni).
+
+3. Sekolah & Pendidikan vokasi
+• Kualitas kurikulum praktik dan orientasi industri.
+• Ketersediaan bimbingan karir, modul adaptabilitas, dan fasilitas praktek.
+
+4. Lingkungan kerja & ekonomi
+• Perubahan teknologi, kebutuhan kompetensi baru, peluang kerja regional.
+• Kebijakan pendidikan/ketenagakerjaan dan kondisi pasar kerja.
+
+5. Kultural & Nilai
+• Norma budaya mengenai pekerjaan (prioritas stabilitas vs. entrepreneurship).`
   },
   {
     id: 'guidance',
-    title: 'Bimbingan Karier melalui Career Construction Theory (CCT)',
-    content: `Berikut poin-poin inti yang harus ada dalam Bimbingan Karier melalui Career Construction Theory (CCT) untuk Mengembangkan Adaptabilitas Karier Siswa:
-Pengembangan Narasi Pribadi
-Alat Bantu Naratif
-Pelatihan Keterampilan Adaptasi
-Fasilitasi Refleksi dan Umpan Balik
-Pembangunan Jaringan Dukungan Sosial
-Integrasi Pengembangan Karakter dan Nilai
-Perencanaan dan Tindakan Konkret
-Evaluasi Berkelanjutan
-Dengan elemen-elemen di atas, bimbingan karier berbasis CCT akan lebih komprehensif dan efektif dalam memperkuat kemampuan adaptasi karier siswa.`
+    title: 'Menumbuhkan Adaptabilitas Karier Siswa',
+    content: `Kerangka teoretis untuk menumbuhkan adaptabilitas karier pada siswa SMK menekankan pengembangan keempat sumber daya adaptif Savickas melalui pengalaman penguasaan, refleksi naratif, penguatan self-efficacy, siklus pembelajaran pengalaman, dukungan ekologi, serta mekanisme monitoring dan umpan balik yang etis. Prioritas teoretisnya adalah menumbuhkan orientasi masa depan yang realistis (concern), memperkuat kapasitas pengambilan keputusan dan regulasi diri (control), menumbuhkan disposisi eksploratif (curiosity), dan membangun bukti pengalaman yang memperkuat keyakinan diri (confidence).`
   }
 ];
 
-export default function AdaptabilitasIntro() {
+function AdaptabilitasIntroContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const [currentSection, setCurrentSection] = useState(0);
+  const [contentSections, setContentSections] = useState(defaultContentSections);
+  const [loading, setLoading] = useState(true);
+  const isPosttest = searchParams?.get('posttest') === 'true';
+
+  useEffect(() => {
+    const loadContent = async () => {
+      try {
+        const stage = isPosttest ? 'adaptabilitas-posttest' : 'adaptabilitas-pretest';
+        const res = await fetch(`/api/cms/intro?stage=${stage}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.data && data.data.length > 0) {
+            // Convert slides format to contentSections format
+            const sections = data.data.map((slide: { key?: string; title?: string; paragraphs?: string[] | string }, idx: number) => ({
+              id: slide.key || `section-${idx}`,
+              title: slide.title || '',
+              content: Array.isArray(slide.paragraphs) 
+                ? slide.paragraphs.join('\n') 
+                : (typeof slide.paragraphs === 'string' ? slide.paragraphs : '')
+            })).filter((section: { title: string; content: string }) => section.title || section.content);
+            if (sections.length > 0) {
+              setContentSections(sections);
+            } else {
+              // Use default content if converted sections are empty
+              setContentSections(defaultContentSections);
+            }
+          } else {
+            // Use default content
+            setContentSections(defaultContentSections);
+          }
+        } else {
+          // Use default content on error
+          setContentSections(defaultContentSections);
+        }
+      } catch (error) {
+        console.error('Error loading adaptabilitas intro:', error);
+        // Use default content on error
+        setContentSections(defaultContentSections);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadContent();
+  }, [isPosttest]);
 
   if (!user) {
     return (
@@ -91,6 +140,20 @@ export default function AdaptabilitasIntro() {
           <button onClick={() => router.push('/login')} className="bg-blue-500 text-white px-6 py-2 rounded">
             Login
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{
+        backgroundImage: 'url(/Background_Mulai.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}>
+        <div className="bg-white bg-opacity-90 rounded-lg p-8 text-center">
+          <p className="text-gray-800">Memuat konten...</p>
         </div>
       </div>
     );
@@ -121,7 +184,9 @@ export default function AdaptabilitasIntro() {
         <GameCard className="mt-28">
           <div className="flex items-start justify-between mb-4">
             <h2 className="text-3xl font-extrabold drop-shadow">{section.title}</h2>
-            <TextToSpeech text={`${section.title}. ${section.content}`} />
+            <div className="[&_svg]:!text-white [&_svg:hover]:!text-white [&_svg]:!fill-white [&_svg.text-red-500]:!text-white">
+              <TextToSpeech text={`${section.title}. ${section.content}`} />
+            </div>
           </div>
           <div className="text-white/95 whitespace-pre-line font-semibold">
             {section.content}
@@ -137,7 +202,12 @@ export default function AdaptabilitasIntro() {
               <GameButton
                 onClick={() => {
                   if (isLastSection) {
-                    router.push('/adaptabilitas/diary');
+                    // Redirect ke diary, dengan query parameter posttest jika ini posttest
+                    if (isPosttest) {
+                      router.push('/adaptabilitas/diary?posttest=true');
+                    } else {
+                      router.push('/adaptabilitas/diary');
+                    }
                   } else {
                     setCurrentSection(currentSection + 1);
                   }
@@ -151,6 +221,25 @@ export default function AdaptabilitasIntro() {
         </GameCard>
       </div>
     </div>
+  );
+}
+
+export default function AdaptabilitasIntro() {
+  return (
+    <Suspense fallback={
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          backgroundImage: 'url(/Background_Mulai.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <LoadingSpinner size="lg" text="Memuat..." fullScreen={false} />
+      </div>
+    }>
+      <AdaptabilitasIntroContent />
+    </Suspense>
   );
 }
 

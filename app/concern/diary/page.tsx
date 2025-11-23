@@ -104,20 +104,25 @@ export default function ConcernDiary() {
         <div className="flex items-center justify-between text-white">
           <div>
             <GameBadge className="bg-blue-500/80 border-white">Stage Concern</GameBadge>
-            <h1 className="text-3xl font-extrabold drop-shadow mt-2">Catatan Harian Concern</h1>
-            <p className="text-white/85 font-semibold">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold drop-shadow mt-2">Catatan Harian Concern</h1>
+            <p className="text-sm sm:text-base text-white/85 font-semibold">
               Gunakan momen ini untuk merencanakan langkah konkret menuju tujuan kariermu.
             </p>
           </div>
-          <GameButton onClick={() => router.push('/concern')} className="from-gray-400 to-gray-600">
-            Menu Concern
-          </GameButton>
+          <div className="flex gap-2">
+            <GameButton onClick={() => router.push('/')} className="from-blue-500 to-blue-600">
+              ← Home
+            </GameButton>
+            <GameButton onClick={() => router.push('/concern')} className="from-gray-400 to-gray-600">
+              Menu Concern
+            </GameButton>
+          </div>
         </div>
 
         <GameCard className="bg-gradient-to-br from-emerald-400 to-teal-500">
           <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-4">
-              <h2 className="text-2xl font-extrabold drop-shadow">Petunjuk</h2>
+              <h2 className="text-xl sm:text-2xl font-extrabold drop-shadow">Petunjuk</h2>
               <p className="text-white/90 font-semibold">
                 Tuliskan satu rencana atau tujuan karier yang ingin kamu wujudkan. Jelaskan alasannya, langkah
                 pendukung, serta harapanmu setelah menjalankan rencana tersebut.

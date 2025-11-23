@@ -71,8 +71,8 @@ export default function ResultsHub() {
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="text-center text-white space-y-2">
           <GameBadge className="bg-yellow-400/90 text-emerald-800 border-white">HASIL</GameBadge>
-          <h1 className="text-4xl font-extrabold drop-shadow">Hasil, Proses, Pretest, Posttest, Catatan Harian</h1>
-          <p className="text-lg font-semibold text-white/90 max-w-3xl mx-auto">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold drop-shadow px-4">Hasil, Proses, Pretest, Posttest, Catatan Harian</h1>
+          <p className="text-sm sm:text-base md:text-lg font-semibold text-white/90 max-w-3xl mx-auto px-4">
             Pantau perkembangan adaptabilitas kariermu dengan rangkuman lengkap dari setiap tahap, dilengkapi statistik,
             refleksi, dan interpretasi kategori.
           </p>
@@ -80,11 +80,10 @@ export default function ResultsHub() {
 
         <div className="grid md:grid-cols-2 gap-6">
           {resultLinks.map((link) => (
-            <GameCard key={link.action} className="bg-gradient-to-br from-white/85 to-white/60 text-gray-800 border-4 border-white/70">
+            <GameCard key={link.action} className="bg-gradient-to-br from-white/90 to-white/70 !text-gray-900 border-4 border-white/70">
               <div className="space-y-3">
-                <GameBadge className="bg-emerald-500/80 border-white text-white">{link.badge}</GameBadge>
-                <h2 className="text-2xl font-extrabold drop-shadow-sm">{link.title}</h2>
-                <p className="font-semibold text-gray-700">{link.description}</p>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-extrabold drop-shadow-sm !text-gray-900">{link.title}</h2>
+                <p className="text-sm sm:text-base font-semibold !text-gray-800 leading-relaxed">{link.description}</p>
                 <GameButton onClick={() => router.push(link.action)} className="from-green-500 to-emerald-600">
                   Lihat Detail
                 </GameButton>

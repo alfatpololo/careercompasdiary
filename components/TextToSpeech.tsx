@@ -35,23 +35,32 @@ export function TextToSpeech({ text, className = '' }: TextToSpeechProps) {
   return (
     <button
       onClick={isSpeaking ? stopSpeaking : speakText}
-      className={`${className} flex items-center justify-center transition-all`}
+      className={`${className} flex items-center justify-center transition-all relative`}
       title={isSpeaking ? 'Stop membaca' : 'Baca teks'}
     >
-      <svg 
-        className={`w-6 h-6 ${isSpeaking ? 'text-red-500' : 'text-blue-600'}`}
-        fill="currentColor" 
-        viewBox="0 0 24 24"
-      >
-        {isSpeaking ? (
-          <path d="M6 6h4v12H6V6zm8 0h4v12h-4V6z"/>
-        ) : (
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v2.58c-1.94.42-3.4 1.77-3.4 3.76 0 2.16 1.81 3.36 4.03 3.9 1.42.29 2.33.73 2.33 1.55 0 .82-.77 1.47-2.03 1.47-1.39 0-2.01-.61-2.03-1.84H6.34c.04 1.77 1.34 2.94 3.56 3.36V19h2.31v-2.82c1.73-.35 3.23-1.71 3.23-3.78 0-2.02-1.61-3.06-3.99-3.54z"/>
+      <div className="relative w-8 h-8">
+        <svg 
+          viewBox="-3 0 19 19" 
+          xmlns="http://www.w3.org/2000/svg"
+          className={`w-full h-full transition-colors duration-300 ${
+            isSpeaking 
+              ? 'text-red-500 animate-pulse' 
+              : 'text-emerald-600 hover:text-emerald-700'
+          }`}
+          fill="currentColor"
+        >
+          <path d="M11.665 7.915v1.31a5.257 5.257 0 0 1-1.514 3.694 5.174 5.174 0 0 1-1.641 1.126 5.04 5.04 0 0 1-1.456.384v1.899h2.312a.554.554 0 0 1 0 1.108H3.634a.554.554 0 0 1 0-1.108h2.312v-1.899a5.045 5.045 0 0 1-1.456-.384 5.174 5.174 0 0 1-1.641-1.126 5.257 5.257 0 0 1-1.514-3.695v-1.31a.554.554 0 1 1 1.109 0v1.31a4.131 4.131 0 0 0 1.195 2.917 3.989 3.989 0 0 0 5.722 0 4.133 4.133 0 0 0 1.195-2.917v-1.31a.554.554 0 1 1 1.109 0zM3.77 10.37a2.875 2.875 0 0 1-.233-1.146V4.738A2.905 2.905 0 0 1 3.77 3.58a3 3 0 0 1 1.59-1.59 2.902 2.902 0 0 1 1.158-.233 2.865 2.865 0 0 1 1.152.233 2.977 2.977 0 0 1 1.793 2.748l-.012 4.487a2.958 2.958 0 0 1-.856 2.09 3.025 3.025 0 0 1-.937.634 2.865 2.865 0 0 1-1.152.233 2.905 2.905 0 0 1-1.158-.233A2.957 2.957 0 0 1 3.77 10.37z"/>
+        </svg>
+        {isSpeaking && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-3 h-3 bg-red-500 rounded-full animate-ping"></div>
+          </div>
         )}
-      </svg>
+      </div>
     </button>
   );
 }
+
 
 
 
