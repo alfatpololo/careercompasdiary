@@ -167,7 +167,7 @@ export default function ConfidenceEvaluationProcessStudent() {
               </table>
             </div>
 
-            <div className="flex justify_between">
+            <div className="flex justify-between">
               <GameButton type="button" onClick={() => router.back()} className="from-gray-400 to-gray-600">
                 Cancel
               </GameButton>

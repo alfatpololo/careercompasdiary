@@ -268,8 +268,11 @@ export default function DataSiswa() {
         // Sanitize text - remove control characters but keep % for percentages
         // Remove only problematic control characters, not % symbol
         let sanitizedText = String(text || '').replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '');
-        // Remove multiple consecutive % that might appear as separators (like %%%%%)
-        sanitizedText = sanitizedText.replace(/%{2,}/g, '%'); // Replace multiple % with single %
+        // Remove multiple consecutive % that are used as separators (like %%%%%)
+        // But keep % when it's part of a percentage (like 50%, 100%)
+        // Strategy: Replace multiple % (2 or more) with empty string, but preserve single % that follows a digit
+        sanitizedText = sanitizedText.replace(/%{2,}/g, ''); // Remove all multiple % (used as separators)
+        // Note: Single % after a number (like "50%") will remain because it's not part of %{2,} pattern
         sanitizedText = sanitizedText.trim();
         if (!sanitizedText) return;
         
@@ -309,7 +312,7 @@ export default function DataSiswa() {
 
       // Informasi Siswa
       addText('INFORMASI SISWA', 14, true, '#059669');
-      addText('─────────────────────────────────────────', 10, false, '#6b7280');
+      addText('---------------------------------------------------', 10, false, '#6b7280');
       addText(`Nama: ${student.name}`, 11, true);
       addText(`Email: ${student.email || '-'}`, 10);
       addText(`Sekolah: ${student.school || '-'}`, 10);
@@ -322,7 +325,7 @@ export default function DataSiswa() {
 
       // Pretest & Posttest
       addText('PRETEST & POSTTEST', 14, true, '#059669');
-      addText('─────────────────────────────────────────', 10, false, '#6b7280');
+      addText('---------------------------------------------------', 10, false, '#6b7280');
       if (quizzes.length > 0) {
         quizzes.forEach((quiz: { isPosttest?: boolean; createdAt?: string | Date; total?: number; percent?: number; scores?: Record<string, number>; category?: string }, idx: number) => {
           addText(`${quiz.isPosttest ? 'Posttest' : 'Pretest'} #${idx + 1}`, 11, true);
@@ -367,7 +370,7 @@ export default function DataSiswa() {
 
       // Stage Attempts
       addText('STAGE ATTEMPTS (ASSESSMENT)', 14, true, '#059669');
-      addText('─────────────────────────────────────────', 10, false, '#6b7280');
+      addText('---------------------------------------------------', 10, false, '#6b7280');
       if (stages.length > 0) {
         stages.forEach((attempt: { stage: string; score: number; passed: boolean; createdAt?: string | Date; answers?: number[] }, idx: number) => {
           addText(`Attempt #${idx + 1}`, 11, true);
@@ -387,7 +390,7 @@ export default function DataSiswa() {
 
       // Diaries
       addText('CATATAN HARIAN (DIARY)', 14, true, '#059669');
-      addText('─────────────────────────────────────────', 10, false, '#6b7280');
+      addText('---------------------------------------------------', 10, false, '#6b7280');
       if (diaries.length > 0) {
         diaries.forEach((diary: { stage?: string; judul?: string; tanggal?: string | Date; createdAt?: string | Date; isi?: string }, idx: number) => {
           addText(`Diary #${idx + 1}`, 11, true);
@@ -413,7 +416,7 @@ export default function DataSiswa() {
 
       // Evaluations
       addText('EVALUASI', 14, true, '#059669');
-      addText('─────────────────────────────────────────', 10, false, '#6b7280');
+      addText('---------------------------------------------------', 10, false, '#6b7280');
       if (evaluations.length > 0) {
         evaluations.forEach((evaluation: { type?: string; createdAt?: string | Date; answers?: number[] }, idx: number) => {
           addText(`Evaluasi #${idx + 1}`, 11, true);
@@ -431,7 +434,7 @@ export default function DataSiswa() {
 
       // Summary
       addText('RINGKASAN', 14, true, '#059669');
-      addText('─────────────────────────────────────────', 10, false, '#6b7280');
+      addText('---------------------------------------------------', 10, false, '#6b7280');
       addText(`Total Stage Attempts: ${stages.length}`, 10);
       addText(`Total Quiz Results: ${quizzes.length}`, 10);
       addText(`Total Diaries: ${diaries.length}`, 10);

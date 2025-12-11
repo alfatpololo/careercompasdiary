@@ -421,18 +421,74 @@ export default function JourneyMap() {
       }}
     >
 
-      {/* Interactive Stage Buttons */}
+      {/* Mobile/Tablet: Vertical Layout */}
+      <div className="lg:hidden absolute top-1/2 left-0 right-0 z-20 px-4 sm:px-6 md:px-8 overflow-y-auto max-h-[70vh] transform -translate-y-1/2">
+        <div className="flex flex-col gap-3 sm:gap-4 md:gap-5 justify-center items-center w-full">
+          {stages.map((stage) => {
+            // EXPLICIT check: pastikan unlocked[stage.id] selalu boolean, bukan undefined
+            // START selalu bisa diklik meskipun sudah selesai
+            // Guru bisa akses semua stage untuk evaluasi
+            const isStageUnlocked = stage.id === 'start' ? true : (unlocked[stage.id] === true);
+            const canClick = isGuru === true || stage.id === 'start' || isStageUnlocked;
+            
+            return (
+            <div
+              key={stage.id}
+              className={`relative group w-full max-w-xs mx-auto ${canClick ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
+              onClick={() => canClick && handleStageClick(stage.id)}
+            >
+              <div className={`
+                relative transition-all duration-200 transform ${canClick ? 'hover:scale-105' : ''}
+                rounded-2xl border-4 border-white/70 shadow-[0_6px_0_rgba(0,0,0,0.25)] px-4 py-3 sm:px-5 sm:py-3.5
+                ${stage.id === 'start' ? 'bg-gradient-to-b from-yellow-300 to-yellow-500' : ''}
+                ${stage.id === 'concern' ? (isStageUnlocked ? 'bg-gradient-to-b from-sky-400 to-blue-600' : 'bg-gray-400') : ''}
+                ${stage.id === 'control' ? (isStageUnlocked ? 'bg-gradient-to-b from-emerald-400 to-emerald-600' : 'bg-gray-400') : ''}
+                ${stage.id === 'curiosity' ? (isStageUnlocked ? 'bg-gradient-to-b from-purple-400 to-purple-600' : 'bg-gray-400') : ''}
+                ${stage.id === 'confidence' ? (isStageUnlocked ? 'bg-gradient-to-b from-orange-400 to-orange-600' : 'bg-gray-400') : ''}
+                ${stage.id === 'adaptabilitas' ? (isStageUnlocked ? 'bg-gradient-to-b from-pink-400 to-pink-600' : 'bg-gray-400') : ''}
+              `}>
+                <div className="text-white font-extrabold text-sm sm:text-base text-center tracking-wide drop-shadow">
+                  {stage.name}
+                </div>
+                
+                {stage.id !== 'start' && stage.id !== 'adaptabilitas' && (stage.stats.lolos > 0 || stage.stats.gagal > 0) && (
+                  <div className="text-xs text-white mt-2 text-center font-bold bg-black/30 px-2 py-1 rounded">
+                    <div>LOLOS: {stage.stats.lolos}</div>
+                    <div>GAGAL: {stage.stats.gagal}</div>
+                  </div>
+                )}
+                
+                {((stage.id === 'start' && startDone) || 
+                  (stage.id !== 'start' && stage.id !== 'adaptabilitas' && latestPass[stage.id]?.passed === true) ||
+                  (stage.id !== 'start' && stage.id !== 'adaptabilitas' && stageDone[stage.id] === true)) && (
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center ring-4 ring-white shadow-lg animate-pulse">
+                    <span className="text-white text-base font-bold">✓</span>
+                  </div>
+                )}
+                
+                {!canClick && stage.id !== 'start' && (
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-gray-800 bg-opacity-90 rounded-full flex items-center justify-center z-10 border-2 border-white">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+            </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Desktop: Absolute Positioning (Original Layout) */}
       {stages.map((stage) => {
-        // EXPLICIT check: pastikan unlocked[stage.id] selalu boolean, bukan undefined
-        // START selalu bisa diklik meskipun sudah selesai
-        // Guru bisa akses semua stage untuk evaluasi
         const isStageUnlocked = stage.id === 'start' ? true : (unlocked[stage.id] === true);
         const canClick = isGuru === true || stage.id === 'start' || isStageUnlocked;
         
         return (
         <div
           key={stage.id}
-          className={`absolute z-20 group ${canClick ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
+          className={`hidden lg:block absolute z-20 group ${canClick ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
           style={{
             top: stage.position.top,
             left: stage.position.left,
@@ -440,7 +496,6 @@ export default function JourneyMap() {
           }}
           onClick={() => canClick && handleStageClick(stage.id)}
         >
-          {/* Stage Button styled like game badge */}
           <div className={`
             relative transition-all duration-200 transform ${canClick ? 'hover:scale-110' : ''}
             rounded-2xl border-4 border-white/70 shadow-[0_6px_0_rgba(0,0,0,0.25)] px-4 py-2
@@ -455,7 +510,6 @@ export default function JourneyMap() {
               {stage.name}
             </div>
             
-            {/* Stats - tampilkan retry statistics di bawah button */}
             {stage.id !== 'start' && stage.id !== 'adaptabilitas' && (stage.stats.lolos > 0 || stage.stats.gagal > 0) && (
               <div className="text-xs text-white mt-1 text-center font-bold bg-black/30 px-2 py-1 rounded">
                 <div>LOLOS: {stage.stats.lolos}</div>
@@ -463,7 +517,6 @@ export default function JourneyMap() {
               </div>
             )}
             
-            {/* Completion Indicator */}
             {((stage.id === 'start' && startDone) || 
               (stage.id !== 'start' && stage.id !== 'adaptabilitas' && latestPass[stage.id]?.passed === true) ||
               (stage.id !== 'start' && stage.id !== 'adaptabilitas' && stageDone[stage.id] === true)) && (
@@ -472,7 +525,6 @@ export default function JourneyMap() {
               </div>
             )}
             
-            {/* Lock Indicator for locked stages */}
             {!canClick && stage.id !== 'start' && (
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-gray-800 bg-opacity-90 rounded-full flex items-center justify-center z-10 border-2 border-white">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -480,10 +532,8 @@ export default function JourneyMap() {
                 </svg>
               </div>
             )}
-            
           </div>
           
-          {/* Hover Tooltip */}
           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
             <GameBadge className="bg-black/70 border-white text-white">Klik untuk {canClick ? (stage.id === 'start' && startDone ? 'mengulang' : 'memulai') : 'membuka'} {stage.name}</GameBadge>
           </div>

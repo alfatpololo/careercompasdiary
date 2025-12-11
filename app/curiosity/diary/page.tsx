@@ -15,6 +15,7 @@ export default function CuriosityDiary() {
   const router = useRouter();
   const { user } = useAuth();
   const [tanggal] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [judul, setJudul] = useState<string>('');
   const [jawaban, setJawaban] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
@@ -22,6 +23,11 @@ export default function CuriosityDiary() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!judul.trim()) {
+      alert('Silakan isi judul catatan.');
+      return;
+    }
 
     if (!jawaban.trim()) {
       alert('Silakan tuliskan langkah eksplorasi kariermu.');
@@ -43,7 +49,7 @@ export default function CuriosityDiary() {
           userId: user.uid,
           nama,
           tanggal,
-          judul: 'Curiosity - Catatan Harian',
+          judul: judul.trim(),
           isi: [
             `Pertanyaan: ${questionText}`,
             `Jawaban: ${jawaban.trim()}`,
@@ -147,6 +153,18 @@ export default function CuriosityDiary() {
                     className="w-full px-3 py-2 rounded-xl bg-white/90 text-gray-800 border-4 border-white/70"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-extrabold text-white mb-2 drop-shadow">Judul Catatan</label>
+                <input
+                  type="text"
+                  value={judul}
+                  onChange={(e) => setJudul(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-white/90 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-purple-300 border-4 border-white/70"
+                  placeholder="Masukkan judul catatan harian"
+                  required
+                />
               </div>
 
               <div>

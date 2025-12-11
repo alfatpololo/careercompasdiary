@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import { GameModal, GameButton, GameBadge, LoadingOverlay } from '../../../components/GameUI';
@@ -45,36 +45,36 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
 
   const questions = {
     concern: [
-      'Saya memiliki gambaran tujuan karier jangka pendek dan panjang',
-      'Saya rutin meninjau rencana masa depan saya',
-      'Saya menyadari dampak pilihan hari ini terhadap masa depan',
-      'Saya mengetahui jalur pendidikan/keahlian untuk karier impian',
-      'Saya memiliki daftar langkah konkret menuju tujuan karier',
-      'Saya mengalokasikan waktu khusus untuk merencanakan karier'
+      'Membayangkan seperti apa karier saya di masa depan',
+      'Menyadari bahwa pilihan hari ini menentukan masa depan saya',
+      'Saya mempersiapkan masa depan',
+      'Saya menyadari akan pilihan-pilihan pendidikan dan pilihan karir yang harus saya buat',
+      'Merencanakan bagaimana cara mencapai tujuan saya',
+      'Saya memikirkan mengenai karir saya'
     ],
     control: [
-      'Saya mengambil keputusan karier secara mandiri dan bertanggung jawab',
-      'Saya mengatur waktu dan prioritas untuk mendukung rencana karier',
-      'Saya konsisten menjalankan keputusan yang sudah saya buat',
-      'Saya tetap pada rencana meskipun ada distraksi dari teman/lingkungan',
-      'Saya mengevaluasi keputusan karier saya secara berkala',
-      'Saya mampu mengatakan “tidak” pada hal yang tidak sejalan dengan tujuan'
+      'Menjaga diri agar tetap optimis',
+      'Saya membuat keputusan sendiri',
+      'Bertanggung jawab atas tindakan saya',
+      'Tetap teguh dengan keyakinan saya',
+      'Mengandalkan kemampuan diri sendiri',
+      'Saya melakukan apa yang benar menurut saya'
     ],
     curiosity: [
-      'Saya mencari informasi profesi melalui membaca/menonton/berdiskusi',
-      'Saya mengikuti kegiatan eksplorasi (webinar, kunjungan industri, dsb.)',
-      'Saya mencoba berbagai peran/tugas untuk menemukan minat saya',
-      'Saya bertanya pada orang berpengalaman tentang dunia kerja',
-      'Saya mengeksplorasi beberapa jalur alternatif sebelum memilih',
-      'Saya tertarik mempelajari bidang baru yang relevan dengan karier'
+      'Mengeksplorasi lingkungan sekitar',
+      'Mencari peluang-peluang untuk berkembang',
+      'Mencari tahu Jalan lain sebelum menentukan pilihan',
+      'Mengamati cara-cara yang berbeda dalam melakukan sesuatu',
+      'Menyelidiki secara lebih dalam pertanyaan-pertanyaan yang saya miliki',
+      'Menjadi ingin tahu tentang peluang-peluang baru'
     ],
     confidence: [
-      'Saya percaya diri menghadapi tugas baru yang menantang',
-      'Saya yakin mampu menyelesaikan target yang saya tetapkan',
-      'Saya berani presentasi/menunjukkan karya di depan orang lain',
-      'Saya tetap tenang dan mencari solusi saat menemui hambatan',
-      'Saya yakin bisa mempelajari skill baru yang dibutuhkan',
-      'Saya merasa mampu bersaing secara sehat dengan orang lain'
+      'Mengerjakan tugas secara efisien',
+      'Menjaga dalam melakukan sesuatu dengan baik',
+      'Mempelajari keterampilan-ketrampilan baru',
+      'Bekerja dengan kemampuan saya',
+      'Saya berusaha mengatasi hambatan-hambatan',
+      'Menyelesaikan masalah-masalah yang saya hadapi'
     ]
   };
 
@@ -548,11 +548,58 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
   const isWeightedStage = stage === 'concern' || stage === 'control' || stage === 'curiosity' || stage === 'confidence';
   const weightedStage = isWeightedStage ? stage as 'concern'|'control'|'curiosity'|'confidence' : null;
   const mcqQuestions = assessmentBank[stage];
-  const weightedQuestions = weightedStage ? weightedAssessment[weightedStage] : [];
+  
+  // Load questions from CMS, fallback to default
+  const [cmsQuestions, setCmsQuestions] = useState<Array<{ q: string; options: Array<{ text: string; score: number }> }> | null>(null);
+  const [loadingQuestions, setLoadingQuestions] = useState(true);
+  
+  useEffect(() => {
+    if (!weightedStage) {
+      setLoadingQuestions(false);
+      return;
+    }
+    
+    const loadCMSQuestions = async () => {
+      try {
+        const res = await fetch(`/api/cms/quiz?stage=${weightedStage}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.data && data.data.length > 0) {
+            setCmsQuestions(data.data);
+          } else {
+            // Fallback to default
+            setCmsQuestions(weightedAssessment[weightedStage]);
+          }
+        } else {
+          // Fallback to default
+          setCmsQuestions(weightedAssessment[weightedStage]);
+        }
+      } catch (error) {
+        console.error('Error loading CMS questions:', error);
+        // Fallback to default
+        setCmsQuestions(weightedAssessment[weightedStage]);
+      } finally {
+        setLoadingQuestions(false);
+      }
+    };
+    
+    loadCMSQuestions();
+  }, [weightedStage]);
+  
+  const weightedQuestions = weightedStage 
+    ? (cmsQuestions || weightedAssessment[weightedStage])
+    : [];
   const questions = isWeightedStage ? weightedQuestions : mcqQuestions;
   const introSlides = weightedStage ? weightedIntroSlides[weightedStage] : [];
   const [introStep, setIntroStep] = useState(weightedStage ? 0 : 0);
-  const [answers, setAnswers] = useState<number[]>(Array(questions.length).fill(-1));
+  const [answers, setAnswers] = useState<number[]>([]);
+  
+  // Update answers array when questions change
+  useEffect(() => {
+    if (questions.length > 0) {
+      setAnswers(Array(questions.length).fill(-1));
+    }
+  }, [questions.length]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [modal, setModal] = useState<null | { type: 'success' | 'fail'; correct: number; detail?: { totalScore: number; maxScore: number; percent: number; category?: 'Very High' | 'High' | 'Low' | 'Very Low' } }>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -620,6 +667,19 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
       setIntroStep(instructionsIndex);
     }
   };
+
+  // Show loading while fetching CMS questions
+  if (loadingQuestions && isWeightedStage) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{
+        backgroundImage: 'url(/Background_Mulai.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}>
+        <div className="text-white text-xl font-semibold">Memuat soal...</div>
+      </div>
+    );
+  }
 
   if (isWeightedStage && introStep < introSlides.length) {
     const slide = introSlides[introStep];
