@@ -65,7 +65,7 @@ export default function ConcernDiary() {
       }
 
       alert('Catatan harian Concern berhasil disimpan! ✅');
-      router.push('/concern/evaluation-process-student');
+      router.push('/concern/evaluation-result-student');
     } catch (error) {
       console.error('[Concern Diary] Failed to save diary:', error);
       alert('Terjadi kesalahan saat menyimpan catatan.');

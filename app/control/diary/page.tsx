@@ -65,7 +65,7 @@ export default function ControlDiary() {
       }
 
       alert('Catatan harian Control berhasil disimpan! ✅');
-      router.push('/control/evaluation-process-student');
+      router.push('/control/evaluation-result-student');
     } catch (error) {
       console.error('[Control Diary] Failed to save diary:', error);
       alert('Terjadi kesalahan saat menyimpan catatan.');

@@ -29,6 +29,12 @@ const resultLinks = [
     action: '/results/diary',
     badge: 'Refleksi',
   },
+  {
+    title: 'Leaderboard Adaptabilitas Karier',
+    description: 'Top 10 peringkat siswa berdasarkan hasil posttest Adaptabilitas Karier.',
+    action: '/leaderboard',
+    badge: 'Peringkat',
+  },
 ];
 
 export default function ResultsHub() {

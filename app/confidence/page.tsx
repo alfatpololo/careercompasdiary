@@ -11,12 +11,6 @@ const studentActions = [
     cta: 'Isi Catatan Harian',
   },
   {
-    title: 'Evaluasi Proses (Siswa)',
-    description: 'Nilai pengalamanmu mengikuti layanan Confidence (Kepercayaan Diri).',
-    action: '/confidence/evaluation-process-student',
-    cta: 'Buka Evaluasi Proses',
-  },
-  {
     title: 'Evaluasi Hasil (Siswa)',
     description: 'Catat dampak layanan terhadap rasa percaya dirimu.',
     action: '/confidence/evaluation-result-student',
@@ -30,12 +24,6 @@ const teacherActions = [
     description: 'Observasi keterlibatan siswa selama layanan Confidence.',
     action: '/confidence/evaluation-process-teacher',
     cta: 'Isi Evaluasi Proses',
-  },
-  {
-    title: 'Evaluasi Hasil (Guru BK)',
-    description: 'Nilai hasil pembelajaran siswa setelah tahap Confidence.',
-    action: '/confidence/evaluation-result-teacher',
-    cta: 'Isi Evaluasi Hasil',
   },
 ];
 

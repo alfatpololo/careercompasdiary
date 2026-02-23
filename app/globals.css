@@ -14,19 +14,26 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Jangan terapkan dark mode pada app - halaman pakai background image */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff;
+    --foreground: #171717;
   }
 }
 
-html, body {
+html {
   overflow-x: hidden;
   max-width: 100vw;
+  min-height: 100%;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport for mobile */
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans);
@@ -55,6 +62,14 @@ button {
   .home-background {
     background-size: cover;
     background-position: center top;
+    min-height: 100dvh;
+  }
+}
+
+/* Fix tampilan mobile: background image dan konten terlihat penuh */
+@media (max-width: 768px) {
+  .min-h-screen {
+    min-height: 100dvh;
   }
 }
 

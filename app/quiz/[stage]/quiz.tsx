@@ -87,7 +87,20 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
     setShowInstructions(false);
   };
 
+  const allQuizStagesComplete = ['concern', 'control', 'curiosity', 'confidence'].every(stage => {
+    const stageAnswers = answers[stage as keyof QuizData] || [];
+    return stageAnswers.length === 6 && stageAnswers.every(ans => ans > 0);
+  });
+  const hasStartedAnyQuiz = ['concern', 'control', 'curiosity', 'confidence'].some(stage => {
+    const stageAnswers = answers[stage as keyof QuizData] || [];
+    return stageAnswers.length > 0;
+  });
+
   const handleHome = () => {
+    if (hasStartedAnyQuiz && !allQuizStagesComplete) {
+      alert('Selesaikan semua quiz terlebih dahulu (6 pertanyaan pada setiap tahap: Concern, Control, Curiosity, Confidence) sebelum kembali.');
+      return;
+    }
     router.push('/journey');
   };
 
@@ -627,22 +640,22 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
   const weightedSuccessActions: Record<'concern'|'control'|'curiosity'|'confidence', Array<{ href: string; label: string; className: string }>> = {
     concern: [
       { href: '/concern/diary', label: 'Catatan Harian Concern', className: 'from-yellow-300 to-orange-400' },
-      { href: '/concern/evaluation-process-student', label: 'Evaluasi Siswa Concern', className: 'from-emerald-400 to-teal-500' },
+      { href: '/concern/evaluation-result-student', label: 'Evaluasi Hasil Concern', className: 'from-emerald-400 to-teal-500' },
       { href: '/concern', label: 'Menu Concern', className: 'from-indigo-400 to-purple-500' },
     ],
     control: [
       { href: '/control/diary', label: 'Catatan Harian Control', className: 'from-yellow-300 to-orange-400' },
-      { href: '/control/evaluation-process-student', label: 'Evaluasi Siswa Control', className: 'from-emerald-400 to-teal-500' },
+      { href: '/control/evaluation-result-student', label: 'Evaluasi Hasil Control', className: 'from-emerald-400 to-teal-500' },
       { href: '/control', label: 'Menu Control', className: 'from-indigo-400 to-purple-500' },
     ],
     curiosity: [
       { href: '/curiosity/diary', label: 'Catatan Harian Curiosity', className: 'from-yellow-300 to-orange-400' },
-      { href: '/curiosity/evaluation-process-student', label: 'Evaluasi Siswa Curiosity', className: 'from-emerald-400 to-teal-500' },
+      { href: '/curiosity/evaluation-result-student', label: 'Evaluasi Hasil Curiosity', className: 'from-emerald-400 to-teal-500' },
       { href: '/curiosity', label: 'Menu Curiosity', className: 'from-indigo-400 to-purple-500' },
     ],
     confidence: [
       { href: '/confidence/diary', label: 'Catatan Harian Confidence', className: 'from-yellow-300 to-orange-400' },
-      { href: '/confidence/evaluation-process-student', label: 'Evaluasi Siswa Confidence', className: 'from-emerald-400 to-teal-500' },
+      { href: '/confidence/evaluation-result-student', label: 'Evaluasi Hasil Confidence', className: 'from-emerald-400 to-teal-500' },
       { href: '/confidence', label: 'Menu Confidence', className: 'from-indigo-400 to-purple-500' },
     ],
   };
@@ -681,6 +694,15 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
     );
   }
 
+  const hasStartedAssessment = answers.some(a => a >= 0);
+  const handleAssessmentHome = () => {
+    if (hasStartedAssessment && !answeredAll) {
+      alert('Selesaikan semua 6 pertanyaan terlebih dahulu sebelum kembali.');
+      return;
+    }
+    router.push('/journey');
+  };
+
   if (isWeightedStage && introStep < introSlides.length) {
     const slide = introSlides[introStep];
     const voiceText = slide.paragraphs.join(' ');
@@ -689,7 +711,7 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="absolute inset-0 bg-black/70" onClick={() => router.push('/journey')} />
+        <div className="absolute inset-0 bg-black/70" onClick={handleAssessmentHome} />
         <div className="relative w-full max-w-4xl">
           <div className="bg-gradient-to-b from-yellow-200 via-yellow-300 to-yellow-400 rounded-[28px] overflow-hidden border-4 border-white/70 shadow-2xl p-6">
             <div className="flex items-center justify-between mb-4">
@@ -699,7 +721,7 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
                   <TextToSpeech text={voiceText} className="hover:scale-105 transition-transform" />
                 </div>
                 <button
-                  onClick={() => router.push('/journey')}
+                  onClick={handleAssessmentHome}
                   className="text-emerald-700 hover:text-emerald-900 transition-colors p-1 rounded-full hover:bg-white/20"
                   aria-label="Tutup"
                 >
@@ -719,7 +741,7 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
               
               {/* Buttons di bawah - kanan kiri */}
               <div className="flex justify-between gap-3 pt-4 border-t-2 border-emerald-200">
-                <GameButton onClick={() => router.push('/journey')}>Home</GameButton>
+                <GameButton onClick={handleAssessmentHome}>Home</GameButton>
                 <GameButton 
                   onClick={() => {
                     if (isLastSlide || isInstructionsSlide) {
@@ -952,7 +974,7 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
             </div>
 
             <div className="flex justify-between mt-6">
-              <button onClick={() => router.push('/journey')} className="bg-gray-500 text-white px-5 py-2 rounded-lg hover:bg-gray-600">Home</button>
+              <button onClick={handleAssessmentHome} className="bg-gray-500 text-white px-5 py-2 rounded-lg hover:bg-gray-600">Home</button>
               <button disabled={!answeredAll} onClick={submit} className="bg-green-500 disabled:bg-gray-300 text-white px-6 py-2 rounded-lg hover:bg-green-600">Submit</button>
             </div>
           </>

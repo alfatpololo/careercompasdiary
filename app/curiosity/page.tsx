@@ -11,12 +11,6 @@ const studentActions = [
     cta: 'Isi Catatan Harian',
   },
   {
-    title: 'Evaluasi Proses (Siswa)',
-    description: 'Nilai pengalamanmu mengikuti layanan Curiosity (Keingintahuan).',
-    action: '/curiosity/evaluation-process-student',
-    cta: 'Buka Evaluasi Proses',
-  },
-  {
     title: 'Evaluasi Hasil (Siswa)',
     description: 'Catat pemahaman dan keberanianmu dalam mengeksplor karier.',
     action: '/curiosity/evaluation-result-student',
@@ -30,12 +24,6 @@ const teacherActions = [
     description: 'Observasi keterlibatan siswa selama layanan Curiosity.',
     action: '/curiosity/evaluation-process-teacher',
     cta: 'Isi Evaluasi Proses',
-  },
-  {
-    title: 'Evaluasi Hasil (Guru BK)',
-    description: 'Nilai hasil pembelajaran siswa setelah tahap Curiosity.',
-    action: '/curiosity/evaluation-result-teacher',
-    cta: 'Isi Evaluasi Hasil',
   },
 ];
 

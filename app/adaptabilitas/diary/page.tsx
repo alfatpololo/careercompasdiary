@@ -32,11 +32,11 @@ function DiaryFormContent() {
 
       if (response.ok) {
         alert('Catatan harian berhasil disimpan!');
-        // Redirect ke evaluation-process dengan query parameter posttest jika ini posttest
+        // Siswa hanya Evaluasi Hasil - skip evaluation-process
         if (isPosttest) {
-          router.push('/adaptabilitas/evaluation-process?posttest=true');
+          router.push('/adaptabilitas/evaluation-result?posttest=true');
         } else {
-          router.push('/adaptabilitas/evaluation-process');
+          router.push('/adaptabilitas/evaluation-result');
         }
       } else {
         alert('Terjadi kesalahan saat menyimpan catatan');

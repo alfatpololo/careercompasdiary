@@ -99,6 +99,7 @@ export default function Home() {
     'DATA SISWA',
     'CMS INTRO',
     'CMS QUIZ',
+    'CMS INTRO EVALUASI',
     'CMS DEVELOPERS',
   ] : [];
   
@@ -180,15 +181,26 @@ export default function Home() {
                   {isAuthenticated ? (
                     <>
                       {userRole !== 'guru' && (
-                        <GameButton 
-                          className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base justify-start" 
-                          onClick={() => {
-                            setIsMenuOpen(false);
-                            router.push('/profile');
-                          }}
-                        >
-                          PROFIL
-                        </GameButton>
+                        <>
+                          <GameButton 
+                            className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base justify-start" 
+                            onClick={() => {
+                              setIsMenuOpen(false);
+                              router.push('/profile');
+                            }}
+                          >
+                            PROFIL
+                          </GameButton>
+                          <GameButton 
+                            className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base justify-start from-amber-500 to-amber-600" 
+                            onClick={() => {
+                              setIsMenuOpen(false);
+                              router.push('/leaderboard');
+                            }}
+                          >
+                            🏆 PERINGKAT
+                          </GameButton>
+                        </>
                       )}
                       <GameButton 
                         className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base justify-start from-red-400 to-red-600" 
@@ -265,6 +277,7 @@ export default function Home() {
                 if (item === 'DATA SISWA') router.push('/guru/data-siswa');
                 if (item === 'CMS INTRO') router.push('/guru/cms-intro');
                 if (item === 'CMS QUIZ') router.push('/guru/cms-quiz');
+                if (item === 'CMS INTRO EVALUASI') router.push('/guru/cms-evaluation');
                 if (item === 'CMS DEVELOPERS') router.push('/guru/cms-developers');
               }}
             >
@@ -276,7 +289,10 @@ export default function Home() {
           {isAuthenticated ? (
             <>
               {userRole !== 'guru' && (
-                <GameButton className="px-4 py-2 text-sm" onClick={() => router.push('/profile')}>PROFIL</GameButton>
+                <>
+                  <GameButton className="px-4 py-2 text-sm" onClick={() => router.push('/profile')}>PROFIL</GameButton>
+                  <GameButton className="px-4 py-2 text-sm from-amber-500 to-amber-600" onClick={() => router.push('/leaderboard')}>🏆 PERINGKAT</GameButton>
+                </>
               )}
               <GameButton 
                 className="px-4 py-2 text-sm from-red-400 to-red-600" 

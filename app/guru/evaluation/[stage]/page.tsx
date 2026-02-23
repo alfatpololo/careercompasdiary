@@ -119,11 +119,8 @@ export default function GuruEvaluationPage() {
   const params = useParams();
   const { user } = useAuth();
   const stage = (params?.stage as string) || 'start';
-  // Special case for CONTROL: only show result evaluation (process is for students)
-  const showProcessEval = stage !== 'control';
-  
-  // Start with process evaluation if available, otherwise start with result
-  const [currentEval, setCurrentEval] = useState<'process' | 'result'>(showProcessEval ? 'process' : 'result');
+  // Guru hanya menggunakan Evaluasi Proses
+  const [currentEval, setCurrentEval] = useState<'process' | 'result'>('process');
   const [processAnswers, setProcessAnswers] = useState<number[]>([]);
   const [resultAnswers, setResultAnswers] = useState<number[]>([]);
   const [saving, setSaving] = useState(false);
@@ -158,7 +155,24 @@ export default function GuruEvaluationPage() {
     checkRole();
   }, [user, router]);
 
-  const questions = EVALUATION_QUESTIONS[stage] || EVALUATION_QUESTIONS.start;
+  const [questions, setQuestions] = useState(EVALUATION_QUESTIONS[stage] || EVALUATION_QUESTIONS.start);
+
+  useEffect(() => {
+    const loadQuestions = async () => {
+      try {
+        const res = await fetch(`/api/cms/evaluation?stage=${stage}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.data) {
+            setQuestions(data.data);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading evaluation questions:', err);
+      }
+    };
+    loadQuestions();
+  }, [stage]);
 
   const handleAnswer = (type: 'process' | 'result', index: number, value: number) => {
     if (type === 'process') {
@@ -196,14 +210,8 @@ export default function GuruEvaluationPage() {
       });
 
       if (response.ok) {
-        alert(`Evaluasi ${type === 'process' ? 'Proses' : 'Hasil'} berhasil disimpan!`);
-        if (type === 'process' && showProcessEval) {
-          // Move to result evaluation after process is saved
-          setCurrentEval('result');
-        } else {
-          // Both evaluations completed, go back to journey
-          router.push('/journey');
-        }
+        alert('Evaluasi Proses berhasil disimpan!');
+        router.push('/journey');
       } else {
         alert('Terjadi kesalahan saat menyimpan evaluasi');
       }

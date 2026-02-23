@@ -11,12 +11,6 @@ const studentActions = [
     cta: 'Isi Catatan Harian',
   },
   {
-    title: 'Evaluasi Proses (Siswa)',
-    description: 'Nilai keterlibatanmu selama mengikuti layanan Concern.',
-    action: '/concern/evaluation-process-student',
-    cta: 'Buka Evaluasi Proses',
-  },
-  {
     title: 'Evaluasi Hasil (Siswa)',
     description: 'Cek sejauh mana pemahamanmu tentang kepedulian karier.',
     action: '/concern/evaluation-result-student',
@@ -30,12 +24,6 @@ const teacherActions = [
     description: 'Observasi keterlibatan siswa selama layanan Concern.',
     action: '/concern/evaluation-process-teacher',
     cta: 'Isi Evaluasi Proses',
-  },
-  {
-    title: 'Evaluasi Hasil (Guru BK)',
-    description: 'Catat hasil pembelajaran siswa setelah tahap Concern.',
-    action: '/concern/evaluation-result-teacher',
-    cta: 'Isi Evaluasi Hasil',
   },
 ];
 

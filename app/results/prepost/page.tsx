@@ -530,11 +530,16 @@ function PrePostResultsContent() {
           </>
         )}
 
-        <div className="flex justify-between">
+        <div className="flex justify-between flex-wrap gap-3">
           <GameButton onClick={() => router.push('/')} className="from-blue-500 to-blue-600">
             ← Home
           </GameButton>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            {(viewMode === null || viewMode === 'posttest') && overall.postTotal > 0 && (
+              <GameButton onClick={() => router.push('/leaderboard')} className="from-amber-500 to-amber-600">
+                🏆 Peringkat
+              </GameButton>
+            )}
             <GameButton onClick={() => router.push('/results')} className="from-gray-400 to-gray-600">
               Kembali ke Hasil
             </GameButton>

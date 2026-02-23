@@ -542,7 +542,18 @@ export default function JourneyMap() {
       })}
 
       {/* Navigation Buttons */}
-      <div className="absolute bottom-8 right-8 z-10 flex space-x-2">
+      <div className="absolute bottom-8 right-8 z-10 flex flex-wrap gap-2 justify-end">
+        {/* Leaderboard - hanya untuk siswa */}
+        {isAuthenticated && isGuru === false && (
+          <button
+            onClick={() => router.push('/leaderboard')}
+            className="px-4 py-2 bg-amber-500 bg-opacity-90 text-white font-bold rounded-lg shadow-lg hover:shadow-xl hover:bg-amber-600 transition-all duration-200 transform hover:scale-105 flex items-center gap-1"
+            title="Papan Peringkat"
+          >
+            <span>🏆</span>
+            <span className="hidden sm:inline">Peringkat</span>
+          </button>
+        )}
         {/* Refresh Button */}
         <button
           onClick={() => fetchStatus()}

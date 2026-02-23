@@ -65,7 +65,7 @@ export default function ConfidenceDiary() {
       }
 
       alert('Catatan harian Confidence berhasil disimpan! ✅');
-      router.push('/confidence/evaluation-process-student');
+      router.push('/confidence/evaluation-result-student');
     } catch (error) {
       console.error('[Confidence Diary] Failed to save diary:', error);
       alert(error instanceof Error ? error.message : 'Terjadi kesalahan saat menyimpan catatan.');

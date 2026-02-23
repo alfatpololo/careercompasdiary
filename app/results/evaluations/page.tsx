@@ -40,13 +40,6 @@ const evaluationStages: StageConfig[] = [
       'Ringkasan evaluasi tahap pengenalan sebelum memasuki perjalanan Career Compass Diary.',
     entries: [
       {
-        key: 'start-process',
-        label: 'Evaluasi Proses (Siswa)',
-        type: 'process',
-        href: '/adaptabilitas/evaluation-process',
-        role: 'siswa',
-      },
-      {
         key: 'start-result',
         label: 'Evaluasi Hasil (Siswa)',
         type: 'result',
@@ -379,11 +372,11 @@ export default function EvaluationResults() {
           </GameCard>
         ) : (
           evaluationStages.map((stage) => {
-            // Filter entries berdasarkan role user
-            // Jika siswa, hanya tampilkan entries dengan role 'siswa'
-            // Jika guru, tampilkan semua entries
-            const filteredEntries = userRole === 'siswa' 
-              ? stage.entries.filter(entry => entry.role === 'siswa')
+            // Siswa: hanya Evaluasi Hasil | Guru: hanya Evaluasi Proses
+            const filteredEntries = userRole === 'siswa'
+              ? stage.entries.filter(entry => entry.role === 'siswa' && entry.type.includes('result'))
+              : userRole === 'guru'
+              ? stage.entries.filter(entry => entry.role === 'guru' && entry.type.includes('process'))
               : stage.entries;
 
             // Skip stage jika tidak ada entries setelah filter

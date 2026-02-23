@@ -6,6 +6,10 @@ dist
 
 # env files
 .env.local
+
+# Firebase service account (jangan commit!)
+serviceAccountKey.json
+*-firebase-adminsdk-*.json
 .env.development.local
 .env.test.local
 .env.production.local

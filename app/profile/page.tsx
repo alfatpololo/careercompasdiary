@@ -562,6 +562,7 @@ export default function ProfilePage() {
         { label: 'Home', href: '/' },
         ...(isTeacher ? [] : [{ label: 'Journey', href: '/journey' }]), // Hide Journey for teachers
         ...(isTeacher ? [] : [{ label: 'Hasil', href: '/results' }]), // Hide Hasil for teachers
+        ...(isTeacher ? [] : [{ label: '🏆 Peringkat', href: '/leaderboard' }]), // Leaderboard untuk siswa
         { label: 'Tentang', href: '/tentang' },
         ...(isTeacher ? [] : [{ label: 'Profil', href: '/profile' }]), // Hide Profil for teachers (they have menu in navbar)
       ].map((item) => (
@@ -859,6 +860,9 @@ function StudentView({
               <GameButton onClick={() => location.assign('/results/evaluations')} className="from-blue-500 to-indigo-600 text-xs">
                 Evaluasi Lengkap
               </GameButton>
+              <GameButton onClick={() => location.assign('/leaderboard')} className="from-amber-500 to-amber-600 text-xs">
+                🏆 Lihat Peringkat
+              </GameButton>
               <GameButton onClick={() => location.assign('/concern/diary')} className="from-green-500 to-emerald-600 text-xs">
                 Isi Diary Concern
               </GameButton>
@@ -881,7 +885,7 @@ function TeacherView({
   studentsLoading: boolean;
   studentsError: string | null;
 }) {
-  const [activeTab, setActiveTab] = useState<'biodata' | 'pantau' | 'data-siswa' | 'cms-intro' | 'cms-quiz'>('biodata');
+  const [activeTab, setActiveTab] = useState<'biodata' | 'pantau' | 'data-siswa' | 'cms-intro' | 'cms-quiz' | 'cms-evaluation'>('biodata');
   
   const totalStudents = studentSummaries.length;
   const counts = TEACHER_STAGE_ORDER.reduce<Record<TeacherStageId, number>>((acc, stage) => {
@@ -921,6 +925,7 @@ function TeacherView({
     { id: 'data-siswa' as const, label: 'Tampilan Data Siswa', icon: '👥' },
     { id: 'cms-intro' as const, label: 'CMS Intro', icon: '📝' },
     { id: 'cms-quiz' as const, label: 'CMS Quiz', icon: '✏️' },
+    { id: 'cms-evaluation' as const, label: 'CMS Intro Evaluasi', icon: '📋' },
   ];
 
   return (
@@ -991,6 +996,17 @@ function TeacherView({
       {/* CMS Quiz Tab */}
       {activeTab === 'cms-quiz' && (
         <CMSQuizView />
+      )}
+
+      {/* CMS Intro Evaluasi Tab - redirect ke halaman khusus */}
+      {activeTab === 'cms-evaluation' && (
+        <GameCard className="bg-white/90 border-4 border-white/70 space-y-4">
+          <h2 className="text-xl font-extrabold text-gray-800">CMS Intro Evaluasi</h2>
+          <p className="text-gray-600">Edit pernyataan evaluasi untuk setiap tahap (Evaluasi Proses & Evaluasi Hasil).</p>
+          <GameButton onClick={() => location.assign('/guru/cms-evaluation')} className="from-amber-500 to-amber-600">
+            Buka CMS Intro Evaluasi
+          </GameButton>
+        </GameCard>
       )}
     </>
   );

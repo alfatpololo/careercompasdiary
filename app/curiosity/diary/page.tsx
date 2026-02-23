@@ -65,7 +65,7 @@ export default function CuriosityDiary() {
       }
 
       alert('Catatan harian Curiosity berhasil disimpan! ✅');
-      router.push('/curiosity/evaluation-process-student');
+      router.push('/curiosity/evaluation-result-student');
     } catch (error) {
       console.error('[Curiosity Diary] Failed to save diary:', error);
       alert('Terjadi kesalahan saat menyimpan catatan.');

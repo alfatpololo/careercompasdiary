@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import { GameCard, GameButton, LoadingSpinner } from '../../../components/GameUI';
 
-const questions = [
+const defaultQuestions = [
   'Saya mampu menggunakan website Career Compass Diary',
   'Saya dapat memahami bagaimana fitur-fitur Career Compass Diary mendukung proses bimbingan karier',
   'Saya menunjukkan pemahaman dalam penggunaan website',
@@ -17,8 +17,22 @@ function EvaluationResultContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
+  const [questions, setQuestions] = useState<string[]>(defaultQuestions);
   const [answers, setAnswers] = useState<number[]>([]);
   const isPosttest = searchParams?.get('posttest') === 'true';
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch('/api/cms/evaluation?stage=start');
+        const data = await res.json();
+        if (data.success && data.data?.result?.length) setQuestions(data.data.result);
+      } catch (err) {
+        console.error('Error loading evaluation questions:', err);
+      }
+    };
+    load();
+  }, []);
 
   const handleAnswer = (index: number, value: number) => {
     const newAnswers = [...answers];
