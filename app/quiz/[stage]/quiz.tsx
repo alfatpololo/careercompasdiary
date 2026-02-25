@@ -28,11 +28,77 @@ function isQuizStage(s: string): s is QuizStage {
 }
 
 
+type CaasQuestions = { concern: string[]; control: string[]; curiosity: string[]; confidence: string[] };
+type CaasCmsData = {
+  introTitle: string;
+  introContent: string;
+  instructionTitle: string;
+  instructionContent: string;
+  questions?: CaasQuestions;
+} | null;
+
+const DEFAULT_QUESTIONS_CAAS: CaasQuestions = {
+  concern: [
+    'Membayangkan seperti apa karier saya di masa depan',
+    'Menyadari bahwa pilihan hari ini menentukan masa depan saya',
+    'Saya mempersiapkan masa depan',
+    'Saya menyadari akan pilihan-pilihan pendidikan dan pilihan karir yang harus saya buat',
+    'Merencanakan bagaimana cara mencapai tujuan saya',
+    'Saya memikirkan mengenai karir saya',
+  ],
+  control: [
+    'Menjaga diri agar tetap optimis',
+    'Saya membuat keputusan sendiri',
+    'Bertanggung jawab atas tindakan saya',
+    'Tetap teguh dengan keyakinan saya',
+    'Mengandalkan kemampuan diri sendiri',
+    'Saya melakukan apa yang benar menurut saya',
+  ],
+  curiosity: [
+    'Mengeksplorasi lingkungan sekitar',
+    'Mencari peluang-peluang untuk berkembang',
+    'Mencari tahu Jalan lain sebelum menentukan pilihan',
+    'Mengamati cara-cara yang berbeda dalam melakukan sesuatu',
+    'Menyelidiki secara lebih dalam pertanyaan-pertanyaan yang saya miliki',
+    'Menjadi ingin tahu tentang peluang-peluang baru',
+  ],
+  confidence: [
+    'Mengerjakan tugas secara efisien',
+    'Menjaga dalam melakukan sesuatu dengan baik',
+    'Mempelajari keterampilan-ketrampilan baru',
+    'Bekerja dengan kemampuan saya',
+    'Saya berusaha mengatasi hambatan-hambatan',
+    'Menyelesaikan masalah-masalah yang saya hadapi',
+  ],
+};
+
+const DEFAULT_INTRO_TITLE = 'Selamat Datang! 🌟';
+const DEFAULT_INTRO_CONTENT = `Halo, teman-teman! 👋😊
+Kami ingin mengajak kalian untuk berpartisipasi dalam pengisian kuesioner ini. Kuesioner ini dirancang khusus untuk memahami bagaimana kalian merencanakan masa depan dan mengembangkan potensi diri. ✨
+Jawablah setiap pertanyaan dengan jujur sesuai dengan apa yang kalian rasakan dan pikirkan. Tidak ada jawaban benar atau salah yang terpenting adalah menjadi diri sendiri! ✅
+Kami sangat menghargai waktu dan kejujuran kalian. Hasil dari kuesioner ini akan digunakan untuk tujuan penelitian dan pengembangan, tanpa ada kepentingan lain. Jadi, yuk, bantu kami dengan mengisi kuesioner ini secara santai dan sesuai dengan jati diri kalian! 🚀💡
+Terima kasih banyak atas partisipasinya! Semoga langkah kecil ini bisa membantu kalian memahami dan merancang masa depan yang lebih cerah. 🌟💪
+Silakan isi setiap pertanyaan dengan jujur dan sepenuh hati. Tulis jawaban yang benar-benar mencerminkan dirimu sendiri, sesuai dengan pengalaman, pemikiran, dan perasaanmu selama ini. Tidak ada jawaban yang salah atau benar yang paling penting adalah jawaban itu datang dari dirimu sendiri, bukan karena ingin terlihat baik atau meniru orang lain.`;
+const DEFAULT_INSTRUCTION_TITLE = 'Petunjuk Pengisian 📋';
+const DEFAULT_INSTRUCTION_CONTENT = `Setiap orang menggunakan kekuatan yang berbeda-beda dalam membangun karirnya. Tidak ada orang yang hebat dalam segala hal, setiap orang lebih kuat dalam beberapa hal dibanding dalam hal-hal lainnya. Silahkan anda tetapkan seberapa kuat anda mengembangkan kemampuan-kemampuan di bawah ini menggunakan skala berikut dengan memberikan tanda lingkaran pada nomor yang sesuai.
+Berikut adalah keterangan jawaban:
+• 5 = Paling kuat (PK)
+• 4 = Sangat kuat (SK)
+• 3 = Kuat (K)
+• 2 = Cukup kuat (CK)
+• 1 = Tidak kuat (TK)
+Selanjutnya, TERDAPAT 4 KOLOM yang akan anda isi dengan jawaban yang benar‑benar mencerminkan pengalaman dan kondisi nyata Anda.
+1. Career concern
+2. Career control
+3. Career curiosity
+4. Career confidence.`;
+
 export function QuizComponent({ initialStage = 'concern', showIntroDefault = false, isPosttest = false }: { initialStage?: 'concern'|'control'|'curiosity'|'confidence', showIntroDefault?: boolean, isPosttest?: boolean }) {
   const router = useRouter();
   const { user } = useAuth();
   const [showIntro, setShowIntro] = useState(showIntroDefault);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [caasData, setCaasData] = useState<CaasCmsData>(null);
   const [currentStage, setCurrentStage] = useState<'concern' | 'control' | 'curiosity' | 'confidence' | 'results' | 'congratulations'>(initialStage);
   const [answers, setAnswers] = useState<QuizData>({
     concern: [],
@@ -43,40 +109,43 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
   const [stageMessage, setStageMessage] = useState<string>('');
   const [submitting, setSubmitting] = useState<boolean>(false);
 
-  const questions = {
-    concern: [
-      'Membayangkan seperti apa karier saya di masa depan',
-      'Menyadari bahwa pilihan hari ini menentukan masa depan saya',
-      'Saya mempersiapkan masa depan',
-      'Saya menyadari akan pilihan-pilihan pendidikan dan pilihan karir yang harus saya buat',
-      'Merencanakan bagaimana cara mencapai tujuan saya',
-      'Saya memikirkan mengenai karir saya'
-    ],
-    control: [
-      'Menjaga diri agar tetap optimis',
-      'Saya membuat keputusan sendiri',
-      'Bertanggung jawab atas tindakan saya',
-      'Tetap teguh dengan keyakinan saya',
-      'Mengandalkan kemampuan diri sendiri',
-      'Saya melakukan apa yang benar menurut saya'
-    ],
-    curiosity: [
-      'Mengeksplorasi lingkungan sekitar',
-      'Mencari peluang-peluang untuk berkembang',
-      'Mencari tahu Jalan lain sebelum menentukan pilihan',
-      'Mengamati cara-cara yang berbeda dalam melakukan sesuatu',
-      'Menyelidiki secara lebih dalam pertanyaan-pertanyaan yang saya miliki',
-      'Menjadi ingin tahu tentang peluang-peluang baru'
-    ],
-    confidence: [
-      'Mengerjakan tugas secara efisien',
-      'Menjaga dalam melakukan sesuatu dengan baik',
-      'Mempelajari keterampilan-ketrampilan baru',
-      'Bekerja dengan kemampuan saya',
-      'Saya berusaha mengatasi hambatan-hambatan',
-      'Menyelesaikan masalah-masalah yang saya hadapi'
-    ]
-  };
+  useEffect(() => {
+    const stage = isPosttest ? 'caas2' : 'caas1';
+    fetch(`/api/cms/caas?stage=${stage}`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && json.data) {
+          const q = json.data.questions;
+          const validQuestions: CaasQuestions | undefined =
+            q && [q.concern, q.control, q.curiosity, q.confidence].every(
+              (arr) => Array.isArray(arr) && arr.length === 6
+            )
+              ? {
+                  concern: (q.concern as string[]).slice(0, 6).map((s, i) => (typeof s === 'string' && s.trim()) ? s : DEFAULT_QUESTIONS_CAAS.concern[i]),
+                  control: (q.control as string[]).slice(0, 6).map((s, i) => (typeof s === 'string' && s.trim()) ? s : DEFAULT_QUESTIONS_CAAS.control[i]),
+                  curiosity: (q.curiosity as string[]).slice(0, 6).map((s, i) => (typeof s === 'string' && s.trim()) ? s : DEFAULT_QUESTIONS_CAAS.curiosity[i]),
+                  confidence: (q.confidence as string[]).slice(0, 6).map((s, i) => (typeof s === 'string' && s.trim()) ? s : DEFAULT_QUESTIONS_CAAS.confidence[i]),
+                }
+              : undefined;
+          setCaasData({
+            introTitle: json.data.introTitle ?? (isPosttest ? 'Posttest Adaptabilitas Karier 📊' : DEFAULT_INTRO_TITLE),
+            introContent: json.data.introContent ?? DEFAULT_INTRO_CONTENT,
+            instructionTitle: json.data.instructionTitle ?? DEFAULT_INSTRUCTION_TITLE,
+            instructionContent: json.data.instructionContent ?? DEFAULT_INSTRUCTION_CONTENT,
+            questions: validQuestions,
+          });
+        }
+      })
+      .catch(() => {});
+  }, [isPosttest]);
+
+  const questions: Record<'concern'|'control'|'curiosity'|'confidence', string[]> =
+    caasData?.questions &&
+    [caasData.questions.concern, caasData.questions.control, caasData.questions.curiosity, caasData.questions.confidence].every(
+      (arr) => Array.isArray(arr) && arr.length === 6
+    )
+      ? caasData.questions
+      : DEFAULT_QUESTIONS_CAAS;
 
   const handleIntroNext = () => {
     setShowIntro(false);
@@ -235,6 +304,9 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
 
 
   if (showIntro) {
+    const introTitle = caasData?.introTitle ?? (isPosttest ? 'Posttest Adaptabilitas Karier 📊' : DEFAULT_INTRO_TITLE);
+    const introContent = caasData?.introContent ?? DEFAULT_INTRO_CONTENT;
+    const introParagraphs = introContent.trim().split(/\n\n+/).filter(Boolean);
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/70" onClick={handleHome} />
@@ -242,7 +314,7 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
           <div className="bg-gradient-to-b from-yellow-200 via-yellow-300 to-yellow-400 rounded-[28px] overflow-hidden border-4 border-white/70 shadow-2xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-2xl md:text-3xl font-extrabold text-emerald-700 drop-shadow">
-                {isPosttest ? 'Posttest Adaptabilitas Karier 📊' : 'Selamat Datang! 🌟'}
+                {introTitle}
               </h3>
               <button
                 onClick={handleHome}
@@ -257,15 +329,11 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
             
             <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 custom-scroll">
               <div className="space-y-3 text-emerald-900 whitespace-pre-line">
-                <p>Halo, teman-teman! 👋😊</p>
-                <p>Kami ingin mengajak kalian untuk berpartisipasi dalam pengisian kuesioner ini. Kuesioner ini dirancang khusus untuk memahami bagaimana kalian merencanakan masa depan dan mengembangkan potensi diri. ✨</p>
-                <p>Jawablah setiap pertanyaan dengan jujur sesuai dengan apa yang kalian rasakan dan pikirkan. Tidak ada jawaban benar atau salah yang terpenting adalah menjadi diri sendiri! ✅</p>
-                <p>Kami sangat menghargai waktu dan kejujuran kalian. Hasil dari kuesioner ini akan digunakan untuk tujuan penelitian dan pengembangan, tanpa ada kepentingan lain. Jadi, yuk, bantu kami dengan mengisi kuesioner ini secara santai dan sesuai dengan jati diri kalian! 🚀💡</p>
-                <p>Terima kasih banyak atas partisipasinya! Semoga langkah kecil ini bisa membantu kalian memahami dan merancang masa depan yang lebih cerah. 🌟💪</p>
-                <p className="mt-4 pt-4 border-t-2 border-emerald-200">Silakan isi setiap pertanyaan dengan jujur dan sepenuh hati. Tulis jawaban yang benar-benar mencerminkan dirimu sendiri, sesuai dengan pengalaman, pemikiran, dan perasaanmu selama ini. Tidak ada jawaban yang salah atau benar yang paling penting adalah jawaban itu datang dari dirimu sendiri, bukan karena ingin terlihat baik atau meniru orang lain.</p>
+                {introParagraphs.length > 0 ? introParagraphs.map((para, i) => (
+                  <p key={i}>{para}</p>
+                )) : <p>{introContent}</p>}
               </div>
               
-              {/* Buttons di bawah - kanan kiri */}
               <div className="flex justify-between gap-3 pt-4 border-t-2 border-emerald-200">
                 <GameButton onClick={handleHome}>Home</GameButton>
                 <GameButton onClick={handleIntroNext} className="from-green-400 to-green-600">Next</GameButton>
@@ -278,13 +346,16 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
   }
 
   if (showInstructions) {
+    const instructionTitle = caasData?.instructionTitle ?? DEFAULT_INSTRUCTION_TITLE;
+    const instructionContent = caasData?.instructionContent ?? DEFAULT_INSTRUCTION_CONTENT;
+    const instructionParagraphs = instructionContent.trim().split(/\n\n+/).filter(Boolean);
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/70" onClick={handleHome} />
         <div className="relative w-full max-w-4xl">
           <div className="bg-gradient-to-b from-yellow-200 via-yellow-300 to-yellow-400 rounded-[28px] overflow-hidden border-4 border-white/70 shadow-2xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-2xl md:text-3xl font-extrabold text-emerald-700 drop-shadow">Petunjuk Pengisian 📋</h3>
+              <h3 className="text-2xl md:text-3xl font-extrabold text-emerald-700 drop-shadow">{instructionTitle}</h3>
               <button
                 onClick={handleHome}
                 className="text-emerald-700 hover:text-emerald-900 transition-colors p-1 rounded-full hover:bg-white/20"
@@ -298,25 +369,11 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
             
             <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 custom-scroll">
               <div className="space-y-3 text-emerald-900 whitespace-pre-line">
-                <p>Setiap orang menggunakan kekuatan yang berbeda-beda dalam membangun karirnya. Tidak ada orang yang hebat dalam segala hal, setiap orang lebih kuat dalam beberapa hal dibanding dalam hal-hal lainnya. Silahkan anda tetapkan seberapa kuat anda mengembangkan kemampuan-kemampuan di bawah ini menggunakan skala berikut dengan memberikan tanda lingkaran pada nomor yang sesuai.</p>
-                <p>Berikut adalah keterangan jawaban:</p>
-                <ul className="list-disc ml-5 space-y-1">
-                  <li>5 = Paling kuat (PK)</li>
-                  <li>4 = Sangat kuat (SK)</li>
-                  <li>3 = Kuat (K)</li>
-                  <li>2 = Cukup kuat (CK)</li>
-                  <li>1 = Tidak kuat (TK)</li>
-                </ul>
-                <p>Selanjutnya, TERDAPAT 4 KOLOM yang akan anda isi dengan jawaban yang benar‑benar mencerminkan pengalaman dan kondisi nyata Anda.</p>
-                <ol className="list-decimal ml-5 space-y-1">
-                  <li>Career concern</li>
-                  <li>Career control</li>
-                  <li>Career curiosity</li>
-                  <li>Career confidence.</li>
-                </ol>
+                {instructionParagraphs.length > 0 ? instructionParagraphs.map((para, i) => (
+                  <p key={i}>{para}</p>
+                )) : <p>{instructionContent}</p>}
               </div>
               
-              {/* Buttons di bawah - kanan kiri */}
               <div className="flex justify-between gap-3 pt-4 border-t-2 border-emerald-200">
                 <GameButton onClick={handleHome}>Home</GameButton>
                 <GameButton onClick={handleInstructionsNext} className="from-green-400 to-green-600">Mulai</GameButton>

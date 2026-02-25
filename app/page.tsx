@@ -100,6 +100,7 @@ export default function Home() {
     'CMS INTRO',
     'CMS QUIZ',
     'CMS INTRO EVALUASI',
+    'CMS CAAS I & II',
     'CMS DEVELOPERS',
   ] : [];
   
@@ -170,6 +171,8 @@ export default function Home() {
                         if (item === 'DATA SISWA') router.push('/guru/data-siswa');
                         if (item === 'CMS INTRO') router.push('/guru/cms-intro');
                         if (item === 'CMS QUIZ') router.push('/guru/cms-quiz');
+                        if (item === 'CMS INTRO EVALUASI') router.push('/guru/cms-evaluation');
+                        if (item === 'CMS CAAS I & II') router.push('/guru/cms-caas');
                         if (item === 'CMS DEVELOPERS') router.push('/guru/cms-developers');
                       }}
                     >
@@ -278,6 +281,7 @@ export default function Home() {
                 if (item === 'CMS INTRO') router.push('/guru/cms-intro');
                 if (item === 'CMS QUIZ') router.push('/guru/cms-quiz');
                 if (item === 'CMS INTRO EVALUASI') router.push('/guru/cms-evaluation');
+                if (item === 'CMS CAAS I & II') router.push('/guru/cms-caas');
                 if (item === 'CMS DEVELOPERS') router.push('/guru/cms-developers');
               }}
             >

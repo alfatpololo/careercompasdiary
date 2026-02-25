@@ -885,7 +885,7 @@ function TeacherView({
   studentsLoading: boolean;
   studentsError: string | null;
 }) {
-  const [activeTab, setActiveTab] = useState<'biodata' | 'pantau' | 'data-siswa' | 'cms-intro' | 'cms-quiz' | 'cms-evaluation'>('biodata');
+  const [activeTab, setActiveTab] = useState<'biodata' | 'pantau' | 'data-siswa' | 'cms-intro' | 'cms-quiz' | 'cms-evaluation' | 'cms-caas'>('biodata');
   
   const totalStudents = studentSummaries.length;
   const counts = TEACHER_STAGE_ORDER.reduce<Record<TeacherStageId, number>>((acc, stage) => {
@@ -926,6 +926,7 @@ function TeacherView({
     { id: 'cms-intro' as const, label: 'CMS Intro', icon: '📝' },
     { id: 'cms-quiz' as const, label: 'CMS Quiz', icon: '✏️' },
     { id: 'cms-evaluation' as const, label: 'CMS Intro Evaluasi', icon: '📋' },
+    { id: 'cms-caas' as const, label: 'CMS CAAS I & II', icon: '📄' },
   ];
 
   return (
@@ -1005,6 +1006,17 @@ function TeacherView({
           <p className="text-gray-600">Edit pernyataan evaluasi untuk setiap tahap (Evaluasi Proses & Evaluasi Hasil).</p>
           <GameButton onClick={() => location.assign('/guru/cms-evaluation')} className="from-amber-500 to-amber-600">
             Buka CMS Intro Evaluasi
+          </GameButton>
+        </GameCard>
+      )}
+
+      {/* CMS CAAS I & II Tab */}
+      {activeTab === 'cms-caas' && (
+        <GameCard className="bg-white/90 border-4 border-white/70 space-y-4">
+          <h2 className="text-xl font-extrabold text-gray-800">CMS CAAS I & CAAS II</h2>
+          <p className="text-gray-600">Edit intro dan petunjuk pengisian untuk Pretest (CAAS I) dan Posttest (CAAS II).</p>
+          <GameButton onClick={() => location.assign('/guru/cms-caas')} className="from-amber-500 to-amber-600">
+            Buka CMS CAAS I & II
           </GameButton>
         </GameCard>
       )}

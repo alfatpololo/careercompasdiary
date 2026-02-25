@@ -101,7 +101,7 @@ export default function Login() {
     
     // Menu khusus untuk guru
     if (userRole === 'guru') {
-      items.push('BIODATA GURU', 'PANTAU AKTIFITAS', 'DATA SISWA', 'CMS INTRO', 'CMS QUIZ', 'CMS INTRO EVALUASI');
+      items.push('BIODATA GURU', 'PANTAU AKTIFITAS', 'DATA SISWA', 'CMS INTRO', 'CMS QUIZ', 'CMS INTRO EVALUASI', 'CMS CAAS I & II');
     }
     
     // Jika user sudah login (baik siswa maupun guru) - TIDAK peduli userRole
@@ -218,6 +218,7 @@ export default function Login() {
                       if (item === 'CMS INTRO') router.push('/guru/cms-intro');
                       if (item === 'CMS QUIZ') router.push('/guru/cms-quiz');
                       if (item === 'CMS INTRO EVALUASI') router.push('/guru/cms-evaluation');
+                      if (item === 'CMS CAAS I & II') router.push('/guru/cms-caas');
                       if (item === 'PROFIL') router.push('/profile');
                       if (item === 'REGISTER') router.push('/register');
                       if (item === 'LOGIN') router.push('/login');

@@ -117,7 +117,7 @@ export default function Register() {
 
   // Menu dasar - untuk guru, tidak tampilkan HASIL dan GURU BK/KONSELOR
   const navbarItems = userRole === 'guru'
-    ? ['HOME', 'TENTANG', 'BIODATA GURU', 'PANTAU AKTIFITAS', 'DATA SISWA', 'CMS INTRO', 'CMS QUIZ', 'CMS INTRO EVALUASI', 'LOGOUT']
+    ? ['HOME', 'TENTANG', 'BIODATA GURU', 'PANTAU AKTIFITAS', 'DATA SISWA', 'CMS INTRO', 'CMS QUIZ', 'CMS INTRO EVALUASI', 'CMS CAAS I & II', 'LOGOUT']
     : ['HOME', 'TENTANG', 'HASIL', 'GURU BK/KONSELOR', 'PROFIL', 'REGISTER', 'LOGIN'];
   
   // Jika user sudah login dan bukan guru, tambahkan PROFIL dan LOGOUT
@@ -165,6 +165,7 @@ export default function Register() {
                 if (item === 'CMS INTRO') router.push('/guru/cms-intro');
                 if (item === 'CMS QUIZ') router.push('/guru/cms-quiz');
                 if (item === 'CMS INTRO EVALUASI') router.push('/guru/cms-evaluation');
+                if (item === 'CMS CAAS I & II') router.push('/guru/cms-caas');
                 if (item === 'PROFIL') router.push('/profile');
                 if (item === 'REGISTER') router.push('/register');
                 if (item === 'LOGIN') router.push('/login');
