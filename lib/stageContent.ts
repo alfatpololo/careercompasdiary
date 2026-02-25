@@ -351,14 +351,15 @@ export const weightedIntroSlides: Record<WeightedStageId, IntroSlide[]> = {
   ],
 };
 
-export type ScoreCategory = 'Very High' | 'High' | 'Low' | 'Very Low';
+export type ScoreCategory = 'Very High' | 'High' | 'Medium' | 'Low' | 'Very Low';
 
 export function scoreToCategory(score: number, maxScore: number = 240): ScoreCategory {
-  const percent = (score / maxScore) * 100;
-  if (score >= 240) return 'Very High'; // 100% - Lolos otomatis
-  if (score >= 180) return 'High'; // 75% - Lolos
-  if (score >= 120) return 'Low'; // 50% - Ulang materi + Remedial + retest
-  return 'Very Low'; // < 50% (< 120) - Ulang intensif
+  const pct = maxScore > 0 ? (score / maxScore) * 100 : 0;
+  if (pct >= 90) return 'Very High';   // Sangat tinggi
+  if (pct >= 70) return 'High';       // Tinggi
+  if (pct >= 50) return 'Medium';     // Sedang
+  if (pct >= 30) return 'Low';        // Rendah
+  return 'Very Low';                  // Sangat rendah
 }
 
 export function getCategoryInfo(category: ScoreCategory): { 
@@ -381,6 +382,13 @@ export function getCategoryInfo(category: ScoreCategory): {
         action: 'Lolos',
         color: 'text-blue-700 bg-blue-100',
         passed: true,
+      };
+    case 'Medium':
+      return {
+        label: 'Sedang',
+        action: 'Perlu penguatan',
+        color: 'text-amber-700 bg-amber-100',
+        passed: false,
       };
     case 'Low':
       return {

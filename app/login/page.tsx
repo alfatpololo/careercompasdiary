@@ -141,7 +141,7 @@ export default function Login() {
       if (error && typeof error === 'object' && 'code' in error) {
         const firebaseError = error as { code?: string; message?: string };
         if (firebaseError.code === 'auth/invalid-credential' || firebaseError.code === 'auth/user-not-found') {
-          errorMessage = 'Email tidak terdaftar atau password salah.\n\nSetelah reset Firebase, semua akun telah dihapus.\nSilakan daftar ulang dengan email baru atau klik "Daftar di sini" untuk membuat akun baru.';
+          errorMessage = 'Email tidak terdaftar atau password salah.\n\n• Untuk akun admin: email admin@mail.com, password 123456 (harus 6 karakter).\n• Setelah reset Firebase, daftar ulang atau gunakan "Daftar di sini" untuk akun baru.';
         } else if (firebaseError.code === 'auth/wrong-password') {
           errorMessage = 'Password salah. Silakan coba lagi.';
         } else if (firebaseError.code === 'auth/user-disabled') {

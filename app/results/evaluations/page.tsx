@@ -207,7 +207,7 @@ function formatDate(date?: string) {
 
 function summariseAnswers(answers: number[] | undefined) {
   if (!answers || answers.length === 0) {
-    return { sum: 0, max: 0, percent: 0, category: 'Rendah' as const };
+    return { sum: 0, max: 0, percent: 0, category: 'Very Low' as const };
   }
   const sum = answers.reduce((acc, val) => acc + (Number(val) || 0), 0);
   const max = answers.length * 3;

@@ -223,10 +223,12 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
     const total = Object.values(scores).reduce((a, b) => a + b, 0);
     const percent = (total / 120) * 100;
 
-    let category = 'Rendah';
-    if (percent >= 70) category = 'Tinggi';
-    else if (percent >= 50) category = 'Normal';
-    else category = 'Rendah';
+    let category: 'Sangat Rendah' | 'Rendah' | 'Sedang' | 'Tinggi' | 'Sangat Tinggi' = 'Rendah';
+    if (percent >= 90) category = 'Sangat Tinggi';
+    else if (percent >= 70) category = 'Tinggi';
+    else if (percent >= 50) category = 'Sedang';
+    else if (percent >= 30) category = 'Rendah';
+    else category = 'Sangat Rendah';
 
     return { scores, total, percent, category };
   };
@@ -377,8 +379,10 @@ export function QuizComponent({ initialStage = 'concern', showIntroDefault = fal
               <div className="mt-2">
                 <p className="font-semibold text-gray-800">Kategori:</p>
                 <p className={`text-2xl font-bold ${
-                  category === 'Tinggi' ? 'text-green-700' : 
-                  category === 'Normal' ? 'text-yellow-700' : 'text-red-700'
+                  category === 'Sangat Tinggi' ? 'text-green-700' :
+                  category === 'Tinggi' ? 'text-blue-700' :
+                  category === 'Sedang' ? 'text-amber-700' :
+                  category === 'Rendah' ? 'text-yellow-700' : 'text-red-700'
                 }`}>{category}</p>
               </div>
             </div>
@@ -614,7 +618,7 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
     }
   }, [questions.length]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [modal, setModal] = useState<null | { type: 'success' | 'fail'; correct: number; detail?: { totalScore: number; maxScore: number; percent: number; category?: 'Very High' | 'High' | 'Low' | 'Very Low' } }>(null);
+  const [modal, setModal] = useState<null | { type: 'success' | 'fail'; correct: number; detail?: { totalScore: number; maxScore: number; percent: number; category?: import('../../../lib/stageContent').ScoreCategory } }>(null);
   const [submitting, setSubmitting] = useState(false);
   const passThreshold = 4; // minimal benar 4/6 untuk stage lain
   const weightedMaxScore = weightedStage ? weightedQuestions.length * 40 : 0; // 6 soal * 40 = 240
@@ -784,7 +788,7 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
       : answers.reduce((sum, a, idx) => sum + (a === mcqQuestions[idx].correct ? 1 : 0), 0);
 
     // Determine category and passed status based on new scoring system
-    let category: 'Very High' | 'High' | 'Low' | 'Very Low' | null = null;
+    let category: import('../../../lib/stageContent').ScoreCategory | null = null;
     let passed = false;
     
     if (isWeightedStage) {
@@ -832,7 +836,7 @@ export function AssessmentComponent({ stage }: { stage: 'concern'|'control'|'cur
     const modalPayload: {
       type: 'success' | 'fail';
       correct: number;
-      detail?: { totalScore: number; maxScore: number; percent: number; category?: 'Very High' | 'High' | 'Low' | 'Very Low' };
+      detail?: { totalScore: number; maxScore: number; percent: number; category?: import('../../../lib/stageContent').ScoreCategory };
     } = isWeightedStage
       ? {
           type: passed ? 'success' : 'fail',

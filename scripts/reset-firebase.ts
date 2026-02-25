@@ -1,27 +1,79 @@
 import admin from 'firebase-admin';
 import { config } from 'dotenv';
 import { resolve } from 'path';
+import { readFileSync, existsSync, readdirSync } from 'fs';
 
 // Load .env.local file
 config({ path: resolve(process.cwd(), '.env.local') });
 
-// Initialize Firebase Admin
-if (!admin.apps.length) {
-  const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n');
+function findCredentialFile(): string | null {
+  if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    const p = resolve(process.cwd(), process.env.GOOGLE_APPLICATION_CREDENTIALS);
+    if (existsSync(p)) return p;
+  }
+  const candidates = [
+    'serviceAccountKey.json',
+    'quiz-gdevelop-firebase-adminsdk-fbsvc-824673e282.json',
+    ...readdirSync(process.cwd(), { withFileTypes: true })
+      .filter((f) => f.isFile() && f.name.includes('firebase') && f.name.endsWith('.json'))
+      .map((f) => f.name),
+  ];
+  for (const name of candidates) {
+    const p = resolve(process.cwd(), name);
+    if (existsSync(p)) return p;
+  }
+  return null;
+}
 
-  if (projectId && clientEmail && privateKey) {
-    admin.initializeApp({
-      credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
-    });
-    console.log('✅ Firebase Admin initialized');
-  } else {
+function parsePrivateKey(raw: string | undefined): string | undefined {
+  if (!raw || typeof raw !== 'string') return undefined;
+  let key = raw.trim();
+  if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
+    key = key.slice(1, -1);
+  }
+  key = key.replace(/\\n/g, '\n');
+  return key.trim();
+}
+
+// Initialize Firebase Admin (same logic as lib/firebaseAdmin.ts)
+if (!admin.apps.length) {
+  let initialized = false;
+
+  const credPath = findCredentialFile();
+  if (credPath) {
+    try {
+      const serviceAccount = JSON.parse(readFileSync(credPath, 'utf8'));
+      admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+      initialized = true;
+      console.log('✅ Firebase Admin initialized (from JSON file)');
+    } catch (err) {
+      console.error('[Reset] Gagal load service account JSON:', err);
+    }
+  }
+
+  if (!initialized) {
+    const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
+    const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
+    const privateKey = parsePrivateKey(process.env.FIREBASE_ADMIN_PRIVATE_KEY);
+
+    if (projectId && clientEmail && privateKey) {
+      try {
+        admin.initializeApp({
+          credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
+        });
+        initialized = true;
+        console.log('✅ Firebase Admin initialized (from env)');
+      } catch (err) {
+        console.error('[Reset] Invalid PEM:', err);
+      }
+    }
+  }
+
+  if (!admin.apps.length) {
     console.error('❌ Firebase Admin credentials not found!');
-    console.error('   Make sure .env.local file exists with:');
-    console.error('   - FIREBASE_ADMIN_PROJECT_ID');
-    console.error('   - FIREBASE_ADMIN_CLIENT_EMAIL');
-    console.error('   - FIREBASE_ADMIN_PRIVATE_KEY');
+    console.error('   Opsi 1: Taruh file JSON (serviceAccountKey.json atau quiz-gdevelop-firebase-adminsdk-*.json) di root project');
+    console.error('   Opsi 2: Set GOOGLE_APPLICATION_CREDENTIALS di .env.local');
+    console.error('   Opsi 3: Set FIREBASE_ADMIN_PROJECT_ID, FIREBASE_ADMIN_CLIENT_EMAIL, FIREBASE_ADMIN_PRIVATE_KEY di .env.local');
     process.exit(1);
   }
 }

@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "reset:firebase": "tsx scripts/reset-firebase.ts"
+    "reset:firebase": "tsx scripts/reset-firebase.ts",
+    "create:admin": "tsx scripts/create-admin.ts"
   },
   "dependencies": {
     "firebase": "^12.4.0",

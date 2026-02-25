@@ -425,17 +425,19 @@ export default function HasilPage() {
                                     {quizzes.pretest.category && (() => {
                                       try {
                                         // Map Indonesian category to English ScoreCategory
-                                        const categoryMap: Record<string, 'Very High' | 'High' | 'Low' | 'Very Low'> = {
+                                        const categoryMap: Record<string, import('../../lib/stageContent').ScoreCategory> = {
                                           'Sangat Tinggi': 'Very High',
                                           'Tinggi': 'High',
+                                          'Sedang': 'Medium',
                                           'Rendah': 'Low',
                                           'Sangat Rendah': 'Very Low',
                                           'Very High': 'Very High',
                                           'High': 'High',
+                                          'Medium': 'Medium',
                                           'Low': 'Low',
                                           'Very Low': 'Very Low'
                                         };
-                                        const englishCategory = categoryMap[quizzes.pretest.category] || quizzes.pretest.category as 'Very High' | 'High' | 'Low' | 'Very Low';
+                                        const englishCategory = categoryMap[quizzes.pretest.category] || quizzes.pretest.category as import('../../lib/stageContent').ScoreCategory;
                                         const categoryInfo = getCategoryInfo(englishCategory);
                                         return <p><strong>Kategori:</strong> {categoryInfo?.label || quizzes.pretest.category}</p>;
                                       } catch {
@@ -455,17 +457,19 @@ export default function HasilPage() {
                                     {quizzes.posttest.category && (() => {
                                       try {
                                         // Map Indonesian category to English ScoreCategory
-                                        const categoryMap: Record<string, 'Very High' | 'High' | 'Low' | 'Very Low'> = {
+                                        const categoryMap: Record<string, import('../../lib/stageContent').ScoreCategory> = {
                                           'Sangat Tinggi': 'Very High',
                                           'Tinggi': 'High',
+                                          'Sedang': 'Medium',
                                           'Rendah': 'Low',
                                           'Sangat Rendah': 'Very Low',
                                           'Very High': 'Very High',
                                           'High': 'High',
+                                          'Medium': 'Medium',
                                           'Low': 'Low',
                                           'Very Low': 'Very Low'
                                         };
-                                        const englishCategory = categoryMap[quizzes.posttest.category] || quizzes.posttest.category as 'Very High' | 'High' | 'Low' | 'Very Low';
+                                        const englishCategory = categoryMap[quizzes.posttest.category] || quizzes.posttest.category as import('../../lib/stageContent').ScoreCategory;
                                         const categoryInfo = getCategoryInfo(englishCategory);
                                         return <p><strong>Kategori:</strong> {categoryInfo?.label || quizzes.posttest.category}</p>;
                                       } catch {
