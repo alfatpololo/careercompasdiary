@@ -35,6 +35,12 @@ const resultLinks = [
     action: '/leaderboard',
     badge: 'Peringkat',
   },
+  {
+    title: 'Sertifikat Penghargaan',
+    description: 'Unduh sertifikat apresiasi atas partisipasi dalam kegiatan Career Compass Diary (diberikan kepada nama Anda).',
+    action: '/sertifikat',
+    badge: 'Sertifikat',
+  },
 ];
 
 export default function ResultsHub() {

@@ -536,9 +536,14 @@ function PrePostResultsContent() {
           </GameButton>
           <div className="flex gap-2 flex-wrap">
             {(viewMode === null || viewMode === 'posttest') && overall.postTotal > 0 && (
-              <GameButton onClick={() => router.push('/leaderboard')} className="from-amber-500 to-amber-600">
-                🏆 Peringkat
-              </GameButton>
+              <>
+                <GameButton onClick={() => router.push('/sertifikat')} className="from-emerald-500 to-emerald-600">
+                  📜 Sertifikat
+                </GameButton>
+                <GameButton onClick={() => router.push('/leaderboard')} className="from-amber-500 to-amber-600">
+                  🏆 Peringkat
+                </GameButton>
+              </>
             )}
             <GameButton onClick={() => router.push('/results')} className="from-gray-400 to-gray-600">
               Kembali ke Hasil
