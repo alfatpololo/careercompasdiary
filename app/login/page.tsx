@@ -236,7 +236,8 @@ export default function Login() {
 
       {/* Form Container */}
       <GameCard className="max-w-md w-full mx-4 backdrop-blur-sm">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-white drop-shadow mb-6">Login</h2>
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-white drop-shadow mb-2">Login</h2>
+          <p className="text-center text-white/90 text-sm mb-6">Masuk dengan email dan password yang Anda daftarkan (bukan daftar ulang).</p>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email */}

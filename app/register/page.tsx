@@ -23,8 +23,9 @@ export default function Register() {
     namaSekolah: '',
     email: '',
     phone: '',
-    role: 'siswa' // default role
+    role: 'siswa'
   });
+  const [showEmailAlreadyRegistered, setShowEmailAlreadyRegistered] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -78,11 +79,11 @@ export default function Register() {
       router.push('/login');
     } catch (error) {
       console.error('[Register] Registration error:', error);
-      setLoading(false); // Reset loading jika error
+      setLoading(false);
       
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      if (errorMessage.includes('email-already-in-use') || errorMessage.includes('email sudah')) {
-        alert('Email sudah terdaftar. Silakan login atau gunakan email lain.');
+      if (errorMessage.includes('email-already-in-use') || errorMessage.includes('email sudah') || errorMessage.includes('Email sudah digunakan')) {
+        setShowEmailAlreadyRegistered(true);
       } else if (errorMessage.includes('Gagal menyimpan')) {
         alert('Registrasi berhasil, tapi ada masalah menyimpan data. Silakan login dan coba lagi.');
       } else {
@@ -191,6 +192,27 @@ export default function Register() {
       <GameCard className="max-w-5xl w-full mx-4 backdrop-blur-sm">
         <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-white drop-shadow mb-6">Registrasi</h2>
         
+        {showEmailAlreadyRegistered && (
+          <div className="mb-6 p-4 rounded-xl bg-amber-500/20 border-2 border-amber-400 text-white">
+            <p className="font-bold text-lg mb-2">Email ini sudah terdaftar</p>
+            <p className="text-white/95 mb-4">
+              Jika ini akun Anda, jangan daftar ulang. Gunakan halaman <strong>Login</strong> untuk masuk dengan email dan password yang sama.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <GameButton onClick={() => { setShowEmailAlreadyRegistered(false); router.push('/login'); }} className="from-blue-500 to-blue-600">
+                Ke halaman Login
+              </GameButton>
+              <button
+                type="button"
+                onClick={() => setShowEmailAlreadyRegistered(false)}
+                className="px-4 py-2 rounded-lg bg-white/20 text-white font-semibold hover:bg-white/30"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid md:grid-cols-2 gap-3 max-h-[60vh] overflow-auto pr-2">
           {/* Role Selection */}

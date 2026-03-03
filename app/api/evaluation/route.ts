@@ -39,6 +39,22 @@ export async function POST(request: NextRequest) {
     if (studentId) evalData.studentId = studentId;
     if (evaluatorRole) evalData.evaluatorRole = evaluatorRole;
 
+    // Guru: hanya boleh satu evaluasi proses per tahap (satu kali isi per stage)
+    if (evaluatorRole === 'guru' && type === 'guru-process' && stage) {
+      const existing = await adminDb.collection('evaluations')
+        .where('userId', '==', userId)
+        .where('type', '==', 'guru-process')
+        .where('stage', '==', stage)
+        .limit(1)
+        .get();
+      if (!existing.empty) {
+        return NextResponse.json(
+          { message: 'Evaluasi untuk tahap ini sudah pernah diisi. Hanya dapat diisi satu kali.' },
+          { status: 409 }
+        );
+      }
+    }
+
     const evalRef = adminDb.collection('evaluations').doc();
     await evalRef.set(evalData);
 

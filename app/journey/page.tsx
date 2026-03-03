@@ -14,6 +14,7 @@ export default function JourneyMap() {
   const [stageStats, setStageStats] = useState<Record<string, { lolos: number; gagal: number }>>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [isGuru, setIsGuru] = useState<boolean | null>(null);
+  const [guruEvalStages, setGuruEvalStages] = useState<string[]>([]);
 
   const fetchStatus = useCallback(async () => {
     if (!user) {
@@ -25,12 +26,25 @@ export default function JourneyMap() {
       setLoading(true);
       console.log('[Journey] Fetching status for user:', user.uid);
       
-      // Check if user is guru
+      // Check if user is guru and fetch guru evaluations if so
       try {
         const userRes = await fetch(`/api/users?userId=${encodeURIComponent(user.uid)}`);
         if (userRes.ok) {
           const userData = await userRes.json();
-          setIsGuru(userData.data?.role === 'guru');
+          const isGuruUser = userData.data?.role === 'guru';
+          setIsGuru(isGuruUser);
+          if (isGuruUser) {
+            const evalRes = await fetch(`/api/evaluation?userId=${encodeURIComponent(user.uid)}&type=guru-process`);
+            if (evalRes.ok) {
+              const evalData = await evalRes.json();
+              const list = (evalData.evaluations || [])
+                .map((e: { stage?: string }) => e.stage)
+                .filter((s: string | undefined): s is string => !!s);
+              setGuruEvalStages(list);
+            } else {
+              setGuruEvalStages([]);
+            }
+          }
         }
       } catch (error) {
         console.error('[Journey] Error checking user role:', error);
@@ -179,6 +193,23 @@ export default function JourneyMap() {
     };
   }, [user, fetchStatus]);
 
+  const GURU_EVAL_ORDER = ['start', 'concern', 'control', 'curiosity', 'confidence'] as const;
+
+  const guruUnlocked = useMemo(() => {
+    const completed = new Set(guruEvalStages);
+    const map: Record<string, boolean> = {
+      start: true,
+      concern: completed.has('start'),
+      control: completed.has('concern'),
+      curiosity: completed.has('control'),
+      confidence: completed.has('curiosity'),
+      adaptabilitas: false,
+    };
+    return map;
+  }, [guruEvalStages]);
+
+  const guruCompleted = useMemo(() => new Set(guruEvalStages), [guruEvalStages]);
+
   const unlocked = useMemo(() => {
     // LOGIKA SEQUENTIAL UNLOCK SEDERHANA & STRICT:
     // 1. START → CONCERN (kalau START selesai SEMUA tahap, CONCERN unlock)
@@ -298,9 +329,18 @@ export default function JourneyMap() {
       return;
     }
     
-    // If user is guru, redirect to evaluation page
+    // If user is guru: sequential evaluasi, hanya tahap yang sudah terbuka dan maksimal satu kali isi per tahap
     if (isGuru === true) {
-      console.log('[Journey] ✅ Guru detected, redirecting to evaluation');
+      if (stageId === 'adaptabilitas') {
+        return;
+      }
+      const prevIndex = GURU_EVAL_ORDER.indexOf(stageId as typeof GURU_EVAL_ORDER[number]);
+      const prevStage = prevIndex > 0 ? GURU_EVAL_ORDER[prevIndex - 1] : null;
+      if (prevStage && !guruCompleted.has(prevStage)) {
+        const prevLabel = prevStage === 'start' ? 'START' : prevStage.toUpperCase();
+        alert(`Isi evaluasi ${prevLabel} terlebih dahulu.`);
+        return;
+      }
       router.push(`/guru/evaluation/${stageId}`);
       return;
     }
@@ -425,11 +465,15 @@ export default function JourneyMap() {
       <div className="lg:hidden absolute top-1/2 left-0 right-0 z-20 px-4 sm:px-6 md:px-8 overflow-y-auto max-h-[70vh] transform -translate-y-1/2">
         <div className="flex flex-col gap-3 sm:gap-4 md:gap-5 justify-center items-center w-full">
           {stages.map((stage) => {
-            // EXPLICIT check: pastikan unlocked[stage.id] selalu boolean, bukan undefined
-            // START selalu bisa diklik meskipun sudah selesai
-            // Guru bisa akses semua stage untuk evaluasi
-            const isStageUnlocked = stage.id === 'start' ? true : (unlocked[stage.id] === true);
-            const canClick = isGuru === true || stage.id === 'start' || isStageUnlocked;
+            const isStageUnlocked = isGuru === true
+              ? (stage.id === 'adaptabilitas' ? false : guruUnlocked[stage.id] === true)
+              : (stage.id === 'start' ? true : (unlocked[stage.id] === true));
+            const canClick = isGuru === true
+              ? (stage.id !== 'adaptabilitas' && isStageUnlocked)
+              : (stage.id === 'start' || isStageUnlocked);
+            const showCheck = isGuru === true
+              ? guruCompleted.has(stage.id)
+              : ((stage.id === 'start' && startDone) || (stage.id !== 'start' && stage.id !== 'adaptabilitas' && (latestPass[stage.id]?.passed === true || stageDone[stage.id] === true)));
             
             return (
             <div
@@ -451,16 +495,14 @@ export default function JourneyMap() {
                   {stage.name}
                 </div>
                 
-                {stage.id !== 'start' && stage.id !== 'adaptabilitas' && (stage.stats.lolos > 0 || stage.stats.gagal > 0) && (
+                {isGuru === false && stage.id !== 'start' && stage.id !== 'adaptabilitas' && (stage.stats.lolos > 0 || stage.stats.gagal > 0) && (
                   <div className="text-xs text-white mt-2 text-center font-bold bg-black/30 px-2 py-1 rounded">
                     <div>LOLOS: {stage.stats.lolos}</div>
                     <div>GAGAL: {stage.stats.gagal}</div>
                   </div>
                 )}
                 
-                {((stage.id === 'start' && startDone) || 
-                  (stage.id !== 'start' && stage.id !== 'adaptabilitas' && latestPass[stage.id]?.passed === true) ||
-                  (stage.id !== 'start' && stage.id !== 'adaptabilitas' && stageDone[stage.id] === true)) && (
+                {showCheck && (
                   <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center ring-4 ring-white shadow-lg animate-pulse">
                     <span className="text-white text-base font-bold">✓</span>
                   </div>
@@ -482,8 +524,15 @@ export default function JourneyMap() {
 
       {/* Desktop: Absolute Positioning (Original Layout) */}
       {stages.map((stage) => {
-        const isStageUnlocked = stage.id === 'start' ? true : (unlocked[stage.id] === true);
-        const canClick = isGuru === true || stage.id === 'start' || isStageUnlocked;
+        const isStageUnlocked = isGuru === true
+          ? (stage.id === 'adaptabilitas' ? false : guruUnlocked[stage.id] === true)
+          : (stage.id === 'start' ? true : (unlocked[stage.id] === true));
+        const canClick = isGuru === true
+          ? (stage.id !== 'adaptabilitas' && isStageUnlocked)
+          : (stage.id === 'start' || isStageUnlocked);
+        const showCheck = isGuru === true
+          ? guruCompleted.has(stage.id)
+          : ((stage.id === 'start' && startDone) || (stage.id !== 'start' && stage.id !== 'adaptabilitas' && (latestPass[stage.id]?.passed === true || stageDone[stage.id] === true)));
         
         return (
         <div
@@ -510,16 +559,14 @@ export default function JourneyMap() {
               {stage.name}
             </div>
             
-            {stage.id !== 'start' && stage.id !== 'adaptabilitas' && (stage.stats.lolos > 0 || stage.stats.gagal > 0) && (
+            {isGuru === false && stage.id !== 'start' && stage.id !== 'adaptabilitas' && (stage.stats.lolos > 0 || stage.stats.gagal > 0) && (
               <div className="text-xs text-white mt-1 text-center font-bold bg-black/30 px-2 py-1 rounded">
                 <div>LOLOS: {stage.stats.lolos}</div>
                 <div>GAGAL: {stage.stats.gagal}</div>
               </div>
             )}
             
-            {((stage.id === 'start' && startDone) || 
-              (stage.id !== 'start' && stage.id !== 'adaptabilitas' && latestPass[stage.id]?.passed === true) ||
-              (stage.id !== 'start' && stage.id !== 'adaptabilitas' && stageDone[stage.id] === true)) && (
+            {showCheck && (
               <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center ring-4 ring-white shadow-lg animate-pulse">
                 <span className="text-white text-base font-bold">✓</span>
               </div>

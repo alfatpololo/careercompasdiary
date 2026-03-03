@@ -126,6 +126,8 @@ export default function GuruEvaluationPage() {
   const [saving, setSaving] = useState(false);
   const [checking, setChecking] = useState(true);
   const [isGuru, setIsGuru] = useState(false);
+  const [alreadySubmitted, setAlreadySubmitted] = useState(false);
+  const [submittedAnswers, setSubmittedAnswers] = useState<number[] | null>(null);
 
   useEffect(() => {
     if (!user?.uid) {
@@ -173,6 +175,27 @@ export default function GuruEvaluationPage() {
     };
     loadQuestions();
   }, [stage]);
+
+  useEffect(() => {
+    if (!user?.uid || !isGuru) return;
+    const checkAlreadySubmitted = async () => {
+      try {
+        const res = await fetch(`/api/evaluation?userId=${encodeURIComponent(user.uid)}&type=guru-process`);
+        if (res.ok) {
+          const data = await res.json();
+          const list = data.evaluations || [];
+          const forStage = list.find((e: { stage?: string }) => e.stage === stage);
+          if (forStage?.answers && Array.isArray(forStage.answers)) {
+            setAlreadySubmitted(true);
+            setSubmittedAnswers(forStage.answers);
+          }
+        }
+      } catch (err) {
+        console.error('Error checking existing evaluation:', err);
+      }
+    };
+    checkAlreadySubmitted();
+  }, [user?.uid, isGuru, stage]);
 
   const handleAnswer = (type: 'process' | 'result', index: number, value: number) => {
     if (type === 'process') {
@@ -237,6 +260,33 @@ export default function GuruEvaluationPage() {
 
   if (!isGuru) {
     return null;
+  }
+
+  if (alreadySubmitted) {
+    const stageLabels: Record<string, string> = {
+      start: 'START (Pertemuan Pertama)',
+      concern: 'CONCERN (Pertemuan Kedua)',
+      control: 'CONTROL (Pertemuan Ketiga)',
+      curiosity: 'CURIOSITY (Pertemuan Keempat)',
+      confidence: 'CONFIDENCE (Pertemuan Kelima)',
+    };
+    return (
+      <div className="min-h-screen p-4 flex items-center justify-center" style={{
+        backgroundImage: 'url(/Background_Mulai.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}>
+        <GameCard className="max-w-md text-center">
+          <h2 className="text-2xl font-extrabold text-gray-800 mb-2">Evaluasi Sudah Diisi</h2>
+          <p className="text-gray-600 mb-4">
+            Evaluasi Proses untuk tahap <strong>{stageLabels[stage] || stage}</strong> sudah pernah Anda isi. Setiap tahap hanya dapat diisi satu kali.
+          </p>
+          <GameButton onClick={() => router.push('/journey')} className="from-green-500 to-emerald-600">
+            Kembali ke Journey
+          </GameButton>
+        </GameCard>
+      </div>
+    );
   }
 
   const stageLabels: Record<string, string> = {
