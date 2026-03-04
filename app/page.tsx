@@ -470,6 +470,22 @@ export default function Home() {
           >
             Ayo Mulai
           </GameButton>
+
+          {/* Sertifikat - tombol di home: buka halaman & download PDF */}
+          <div className="mt-4 flex flex-col sm:flex-row gap-3 justify-center items-center w-full max-w-[320px] sm:max-w-md mx-auto">
+            <GameButton 
+              className="w-full sm:w-auto px-6 py-3 text-sm font-bold from-amber-500 to-amber-600" 
+              onClick={() => router.push('/sertifikat')}
+            >
+              Sertifikat / Test PDF
+            </GameButton>
+            <GameButton 
+              className="w-full sm:w-auto px-6 py-3 text-sm font-bold from-blue-500 to-blue-600" 
+              onClick={() => router.push('/sertifikat')}
+            >
+              Download PDF Sertifikat
+            </GameButton>
+          </div>
         </div>
       </div>
     </div>
